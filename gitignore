@@ -1,0 +1,5 @@
+*.pdf
+.DS_Store
+__pycache__
+Full_scaling_NSF_AR_5_500.pt
+*.egg-info

@@ -1,0 +1,142 @@
+# 
+#     INPUT for population synthesis with stripped stars
+#
+# by Ylva Gotberg
+
+# Name of the run
+run_name = run4
+
+# How long to calculate the population for
+duration = 1e8     # years
+
+# Metallicity
+Z = 0.006
+
+# Information for the evolutionary models (location)
+# If you give the loc_sin_grid or the loc_bin_grid, then it will not go automatic on the metallicity. 
+# ! You need at least the loc_sin_grid for the code to run at the moment. 
+# ! Please put a / after the grid
+#loc_sin_grids = /data001/ygoetberg/taurus/single_grid/grids_120117/
+#loc_sin_grid = /data001/ygoetberg/taurus/single_grid/grids_120117/grid_0002/
+loc_sin_grid = /data002/ygoetberg/others_work/Zsolt/20220523/NOMAG/Z6Mix1/0/
+#loc_bin_grids = /data001/ygoetberg/taurus/binaries/grids_180117/small_grids/
+#loc_bin_grid = /data001/ygoetberg/taurus/binaries/grids_180117/small_grids/grid_0002/
+#loc_bin_grid = /data001/ygoetberg/taurus/binaries/grids_180117/small_grids/grid_006/
+
+# Magnetic models - comment this if you don't want to compute magnetic stars
+#loc_B_grids = /data002/ygoetberg/others_work/Zsolt/20220523/Z6Mix1/
+
+# Exclude post-MS evolution? 
+exclude_pMS = True
+
+
+# # # # INPUT ASSUMPTIONS # # # # 
+# Star-formation type
+#    Options are 'constant' and 'starburst'
+type_SF = constant           
+total_mass_starburst = 1e6  # This is the total mass in stars assumed when using starburst (MSun)
+starformation_rate = 0.2  # The star-formation rate in case of constant starformation (MSun/yr)
+# Evaluation times - if multiple, you will have multiple output files.
+#    When do you want output? This can be one number or multiple - do not
+# use spaces. Example: 1e6,2e6,5e6
+evaluation_time = 1e8 #1e6,3e6,5e6,7e6,1e7,2e7,3e7,5e7,7e7    #1e7
+
+# Initial mass function (IMF)
+#    Options are: Kroupa (Kroupa 2001), Salpeter (Salpeter 1939), Alt_Kroupa
+IMF_choice = Kroupa
+mmin = 0.1     # Minimum mass [MSun]
+mmax = 100.    # Maximum mass [MSun]
+#alpha_IMF = -1.9    # This parameter is the slope of the IMF in case of Alt_Kroupa (only for high-mass end), should be negative
+
+
+# Initial magnetic star function (IBF)
+#    Options are: IBF_flat, IBF_gaussian, IBF_log10normal, and IBF_poisson
+#    The IBF here only determines the distribution of field strengths among magnetic stars. 
+#    Bfrac separately determines the incidence rate of magnetic to non-magnetic stars.
+IBF_choice = IBF_log10normal
+Bmin = 0.0     # Minimum magnetic field strength [G]
+Bmax = 50000.0   # Maximum magnetic field strength [G]
+Bmean = 3.6   # For choices: 'IBF_gaussian' and 'IBF_log10normal': mean 
+Bstdev = 0.6  # For choices: 'IBF_gaussian' and 'IBF_log10normal': standard deviation 
+Bk = 0.          # For choice: 'IBF_poisson'
+Bmu = 0.         # For choice: 'IBF_poisson'
+Bfrac = 0.0   # Incidence rate of magnetism, that is, fraction of stars that are magnetic in a population
+
+
+# Binary fraction (fbin)
+#    Options are: DK (Duchene & Kraus 2013), vH13 (van Haaften+13), moe (Moe & DiStefano 2017), constant (constant binary fraction)
+#    In the case of moe - specify the location of the file with the data for their figure 42 
+fbin_choice = constant
+#filename_moe = /data001/ygoetberg/taurus/python_scripts/ionisation_paper/moe_distefano_17.txt # No need for this file anymore.
+fbin_constant = 0.0     # This parameter is the binary fraction for all masses in case 'constant' is chosen (in fraction not percent)
+
+
+# Mass ratio (q)
+#    Options are: flat (uniform distribution between qmin and qmax), linear_slope (1D polynomial: dN/dq = eta_q*q + bb), power_slope (dN/dq = k*q^eta_q)
+q_choice = flat
+qmin = 0.1
+qmax = 1.
+#eta_q = 0.5   # This is for linear_slope or power_slope (0 doesn't work, then choose flat)
+
+
+# Period (P)
+#    Options are: Opik_Sana (Sana+12, Öpik24), log_power (power-law of log P), log_flat (flat in log P)
+P_choice = Opik_Sana
+Mlim_Sana = 15.    # MSun
+#kappa_P = -0.55   # This is only for log_power (don't set it to zero)
+
+
+# # # # # PHYSICAL ASSUMPTIONS # # # # #
+
+# Critical mass ratios
+q_crit_MS = 0.65          # Minimum mass ratio for not merging, MS  -- de Mink+07
+q_crit_HG = 0.4           # Minimum mass ratio for not merging, HG  -- Hurley+02 or de Mink+13?
+
+# Period limit for peanut stars
+P_min_crit = 1e-5  #2.0      # Minimum period before merging (case A restrictive)
+
+# Whether to use the alpha-prescription for common envelope or not
+alpha_prescription = True
+alpha_CE = 1.
+lambda_CE = 0.5
+
+# For which mass range can we form stripped stars?
+#    (comes into play by the binary fraction calculation already)
+Minit_strip_min = 2.
+Minit_strip_max = 100.    
+
+# Mass accretion efficiency
+beta_MS = 1.
+beta_HG = 0.
+beta_HG_CEE = 0.
+
+# Treatment of angular momentum loss during stable mass transfer
+#    Options are: isotropic_reemission, circumbinary_ring, gamma_constant
+angmom = isotropic_reemission
+#gamma_MS = 0.       # This is for the option of gamma_constant
+#gamma_HG = 0.       # This is for the option of gamma_constant
+
+# Rejuvenation assumptions
+#   Options: Tout97 (from Tout et al. 1997)
+rejuv_choice = Tout97
+
+
+# # # # OUTPUT SETTINGS # # # #
+# Which parameters to follow? - make sure to trace
+# log_L,log_Lnuc,log_Teff,center_he4,center_h1,he_core_mass,log_R,star_age,star_mass
+# comma-separated line - no spaces after the equal sign. 
+col = log_Teff,log_L,center_he4,center_h1,log_Lnuc,he_core_mass,log_R,star_age,log_g,star_mass,log_surface_h1,log_surface_he4,surface_n14,surface_c12,surface_o16,Beq,surf_avg_v_rot
+
+# What is the name of the history files from MESA? Keep these having the same names
+history_filename = out.data
+
+# What should be written in the output file? 
+#    Options are: stripped_star_systems_only (only the systems including a stripped star), all (all stars)
+record_stars = all
+# You can limit here what the minimum mass should be for the output files so the output files are smaller
+minimum_mass_to_print = 5.   
+maximum_mass_to_print = 60.
+
+# YG: to do: make output file for parameters that benefit of a continuous time output (for example number of stars, ionizing flux, fraction of magnetic stars...)
+
+save_figs = False
