@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MOSS API &mdash; MOSS  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Installation" href="Installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            MOSS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">MOSS</span></code> API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-MOSS.constants">Model of Stripped Stars</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#MOSS.constants.constants"><code class="docutils literal notranslate"><span class="pre">constants()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#MOSS.extrapolate.extrapolate"><code class="docutils literal notranslate"><span class="pre">extrapolate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#MOSS.GetColumnMESAhist.GetColumnMESAhist"><code class="docutils literal notranslate"><span class="pre">GetColumnMESAhist()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#MOSS.GetSpectra.GetSpectra"><code class="docutils literal notranslate"><span class="pre">GetSpectra()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#MOSS.IBF.IBF_flat"><code class="docutils literal notranslate"><span class="pre">IBF_flat()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#MOSS.IBF.IBF_gaussian"><code class="docutils literal notranslate"><span class="pre">IBF_gaussian()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#MOSS.IBF.IBF_log10normal"><code class="docutils literal notranslate"><span class="pre">IBF_log10normal()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#MOSS.IBF.IBF_poisson"><code class="docutils literal notranslate"><span class="pre">IBF_poisson()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#MOSS.IMF.Alt_Kroupa_IMF"><code class="docutils literal notranslate"><span class="pre">Alt_Kroupa_IMF()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#MOSS.IMF.Kroupa_IMF"><code class="docutils literal notranslate"><span class="pre">Kroupa_IMF()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#MOSS.IMF.Salpeter_IMF"><code class="docutils literal notranslate"><span class="pre">Salpeter_IMF()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#MOSS.locate_ZAMS.locate_ZAMS"><code class="docutils literal notranslate"><span class="pre">locate_ZAMS()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">MOSS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">MOSS</span></code> API</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/chapters/MOSS.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="moss-api">
+<span id="api-label"></span><h1><code class="docutils literal notranslate"><span class="pre">MOSS</span></code> API<a class="headerlink" href="#moss-api" title="Link to this heading"></a></h1>
+<section id="module-MOSS.constants">
+<span id="model-of-stripped-stars"></span><h2>Model of Stripped Stars<a class="headerlink" href="#module-MOSS.constants" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="MOSS.constants.constants">
+<span class="sig-name descname"><span class="pre">constants</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/MOSS/constants.html#constants"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#MOSS.constants.constants" title="Link to this definition"></a></dt>
+<dd><p>= = = = = constants.py  = = = = = = = = = = = = = =</p>
+<section id="parameters">
+<h3>Parameters:<a class="headerlink" href="#parameters" title="Link to this heading"></a></h3>
+<p>None</p>
+</section>
+<section id="returns">
+<h3>Returns:<a class="headerlink" href="#returns" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>const<span class="classifier">dict</span></dt><dd><p>Dictionary with constants in SI and cgs units.</p>
+</dd>
+</dl>
+</section>
+<section id="notes">
+<h3>Notes:<a class="headerlink" href="#notes" title="Link to this heading"></a></h3>
+<p>The constants are taken from the NIST website:
+<a class="reference external" href="http://physics.nist.gov/cuu/Constants/index.html">http://physics.nist.gov/cuu/Constants/index.html</a></p>
+<p>Author:     Ylva Götberg
+Date:       8/7 - 2015</p>
+</section>
+</dd></dl>
+
+<dl class="py function" id="module-MOSS.extrapolate">
+<dt class="sig sig-object py" id="MOSS.extrapolate.extrapolate">
+<span class="sig-name descname"><span class="pre">extrapolate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xmod</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ymod</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/MOSS/extrapolate.html#extrapolate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#MOSS.extrapolate.extrapolate" title="Link to this definition"></a></dt>
+<dd><section id="id1">
+<h3>Parameters:<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>x<span class="classifier">array</span></dt><dd><p>The x-values of the model data</p>
+</dd>
+<dt>y<span class="classifier">array</span></dt><dd><p>The y-values of the model data</p>
+</dd>
+<dt>xmod<span class="classifier">array</span></dt><dd><p>The x-values of the model to extrapolate from</p>
+</dd>
+<dt>ymod<span class="classifier">array</span></dt><dd><p>The y-values of the model to extrapolate from</p>
+</dd>
+</dl>
+</section>
+<section id="id2">
+<h3>Returns:<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>y_new<span class="classifier">array</span></dt><dd><p>The extrapolated y-values</p>
+</dd>
+</dl>
+</section>
+<section id="id3">
+<h3>Notes:<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<p>This function extrapolates the model data to the limits of the model.
+The extrapolation is done by fitting a straight line to the two points
+closest to the limit and then extrapolating from that line.</p>
+</section>
+</dd></dl>
+
+<dl class="py function" id="module-MOSS.GetColumnMESAhist">
+<dt class="sig sig-object py" id="MOSS.GetColumnMESAhist.GetColumnMESAhist">
+<span class="sig-name descname"><span class="pre">GetColumnMESAhist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename_history</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/MOSS/GetColumnMESAhist.html#GetColumnMESAhist"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#MOSS.GetColumnMESAhist.GetColumnMESAhist" title="Link to this definition"></a></dt>
+<dd><section id="id4">
+<h3>Parameters:<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>filename_history<span class="classifier">string</span></dt><dd><p>The location of the history.data file</p>
+</dd>
+<dt>col<span class="classifier">list</span></dt><dd><p>The columns to be read from the history.data file</p>
+</dd>
+</dl>
+</section>
+<section id="id5">
+<h3>Returns:<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>data_cols<span class="classifier">list</span></dt><dd><p>The columns from the history.data file</p>
+</dd>
+</dl>
+</section>
+<section id="id6">
+<h3>Notes:<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
+<p>This function reads a specified history.data file
+from the MESA output and gives the desired columns
+back.</p>
+<p>Author:     Ylva Götberg
+Date:       14/12 - 2014</p>
+</section>
+</dd></dl>
+
+<dl class="py function" id="module-MOSS.GetSpectra">
+<dt class="sig sig-object py" id="MOSS.GetSpectra.GetSpectra">
+<span class="sig-name descname"><span class="pre">GetSpectra</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loc_mod</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/MOSS/GetSpectra.html#GetSpectra"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#MOSS.GetSpectra.GetSpectra" title="Link to this definition"></a></dt>
+<dd><section id="id7">
+<h3>Parameters:<a class="headerlink" href="#id7" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>loc_mod<span class="classifier">string</span></dt><dd><p>The location of the model</p>
+</dd>
+<dt>file_type<span class="classifier">string</span></dt><dd><p>The type of file to be read. Either ‘obs’ or ‘OBSFLUX’</p>
+</dd>
+</dl>
+</section>
+<section id="id8">
+<h3>Returns:<a class="headerlink" href="#id8" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>lambda_mod<span class="classifier">array</span></dt><dd><p>The wavelengths in Angstrom</p>
+</dd>
+<dt>Flambda_mod<span class="classifier">array</span></dt><dd><p>The fluxes in erg s^-1 cm^-2 A^-1</p>
+</dd>
+<dt>Fnorm_mod<span class="classifier">array</span></dt><dd><p>The normalized fluxes</p>
+</dd>
+<dt>Flambda_cont<span class="classifier">array</span></dt><dd><p>The continuum fluxes in erg s^-1 cm^-2 A^-1</p>
+</dd>
+</dl>
+</section>
+<section id="id9">
+<h3>Notes:<a class="headerlink" href="#id9" title="Link to this heading"></a></h3>
+<p>This function reads the output files for a given
+CMFGEN model and returns the wavelengths, frequencies
+and fluxes (Fnu and Flambda). The fluxes are assumed
+that all emission is seen (no 1 kpc assumption or
+similar). They are created for CMFGEN models and assuming that 
+you already created the obs and obs_cont directories with the spectra.</p>
+</section>
+</dd></dl>
+
+<p id="module-MOSS.IBF">IBF.py</p>
+<p>This script allows for testing various initial B-field functions (IBFs), 
+as well as defining the ratio of magnetic to non-magnetic stars in the population. 
+While the concept of the IBF is analogous to the IMF, there is an additional variable, 
+the above mentioned ratio or incidence rate. 
+The <em>currently observed</em> incidence rate is established to be roughly 10%
+in the Galaxy, based on observations of ~1,000 stars. It is unknown in other metallicities.
+The <em>currently observed</em> distribution of magnetic field strengths is roughly lognormal (Shultz+2019).
+Thus the main questions are: 
+What is the IBF that allows for reproducing the currently observed range of field strength, and
+what is the initial B_frac that allows for the currently determined incidence rate.</p>
+<blockquote>
+<div><p>Authors:    Ylva Götberg and Zsolt Keszthelyi
+Year:       2022</p>
+</div></blockquote>
+<dl class="py function">
+<dt class="sig sig-object py" id="MOSS.IBF.IBF_flat">
+<span class="sig-name descname"><span class="pre">IBF_flat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nbr_B</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bmin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bmax</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/MOSS/IBF.html#IBF_flat"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#MOSS.IBF.IBF_flat" title="Link to this definition"></a></dt>
+<dd><section id="id10">
+<h3>Parameters:<a class="headerlink" href="#id10" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>nbr_B<span class="classifier">int</span></dt><dd><p>The number of magnetic stars</p>
+</dd>
+<dt>Bmin<span class="classifier">float</span></dt><dd><p>The minimum B-field strength</p>
+</dd>
+<dt>Bmax<span class="classifier">float</span></dt><dd><p>The maximum B-field strength</p>
+</dd>
+</dl>
+</section>
+<section id="id11">
+<h3>Returns:<a class="headerlink" href="#id11" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>B<span class="classifier">array</span></dt><dd><p>The B-field strengths of the magnetic stars</p>
+</dd>
+</dl>
+</section>
+<section id="id12">
+<h3>Notes:<a class="headerlink" href="#id12" title="Link to this heading"></a></h3>
+<p>This function assigns a uniform distribution of B-field strengths for the magnetic stars.</p>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MOSS.IBF.IBF_gaussian">
+<span class="sig-name descname"><span class="pre">IBF_gaussian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nbr_B</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bmin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bmax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bmean</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bstdev</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/MOSS/IBF.html#IBF_gaussian"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#MOSS.IBF.IBF_gaussian" title="Link to this definition"></a></dt>
+<dd><section id="id13">
+<h3>Parameters:<a class="headerlink" href="#id13" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>nbr_B<span class="classifier">int</span></dt><dd><p>The number of magnetic stars</p>
+</dd>
+<dt>Bmin<span class="classifier">float</span></dt><dd><p>The minimum B-field strength</p>
+</dd>
+<dt>Bmax<span class="classifier">float</span></dt><dd><p>The maximum B-field strength</p>
+</dd>
+<dt>Bmean<span class="classifier">float</span></dt><dd><p>The mean B-field strength</p>
+</dd>
+<dt>Bstdev<span class="classifier">float</span></dt><dd><p>The standard deviation of the B-field strength</p>
+</dd>
+</dl>
+</section>
+<section id="id14">
+<h3>Returns:<a class="headerlink" href="#id14" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>B<span class="classifier">array</span></dt><dd><p>The B-field strengths of the magnetic stars</p>
+</dd>
+</dl>
+</section>
+<section id="id15">
+<h3>Notes:<a class="headerlink" href="#id15" title="Link to this heading"></a></h3>
+<p>This function assigns normally (Gaussian) distributed B-field strength for magnetic stars.</p>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MOSS.IBF.IBF_log10normal">
+<span class="sig-name descname"><span class="pre">IBF_log10normal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nbr_B</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bmin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bmax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bmean</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bstdev</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/MOSS/IBF.html#IBF_log10normal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#MOSS.IBF.IBF_log10normal" title="Link to this definition"></a></dt>
+<dd><section id="id16">
+<h3>Parameters:<a class="headerlink" href="#id16" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>nbr_B<span class="classifier">int</span></dt><dd><p>The number of magnetic stars</p>
+</dd>
+<dt>Bmin<span class="classifier">float</span></dt><dd><p>The minimum B-field strength</p>
+</dd>
+<dt>Bmax<span class="classifier">float</span></dt><dd><p>The maximum B-field strength</p>
+</dd>
+<dt>Bmean<span class="classifier">float</span></dt><dd><p>The mean B-field strength</p>
+</dd>
+<dt>Bstdev<span class="classifier">float</span></dt><dd><p>The standard deviation of the B-field strength</p>
+</dd>
+</dl>
+</section>
+<section id="id17">
+<h3>Returns:<a class="headerlink" href="#id17" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>B<span class="classifier">array</span></dt><dd><p>The B-field strengths of the magnetic stars</p>
+</dd>
+</dl>
+</section>
+<section id="id18">
+<h3>Notes:<a class="headerlink" href="#id18" title="Link to this heading"></a></h3>
+<p>Assign lognormally distributed B-field strength for magnetic stars</p>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MOSS.IBF.IBF_poisson">
+<span class="sig-name descname"><span class="pre">IBF_poisson</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nbr_B</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bmin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bmax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bmu</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/MOSS/IBF.html#IBF_poisson"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#MOSS.IBF.IBF_poisson" title="Link to this definition"></a></dt>
+<dd><section id="id19">
+<h3>Parameters:<a class="headerlink" href="#id19" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>nbr_B<span class="classifier">int</span></dt><dd><p>The number of magnetic stars</p>
+</dd>
+<dt>Bmin<span class="classifier">float</span></dt><dd><p>The minimum B-field strength</p>
+</dd>
+<dt>Bmax<span class="classifier">float</span></dt><dd><p>The maximum B-field strength</p>
+</dd>
+<dt>Bk<span class="classifier">float</span></dt><dd><p>The shape parameter of the distribution</p>
+</dd>
+<dt>Bmu<span class="classifier">float</span></dt><dd><p>The location parameter of the distribution</p>
+</dd>
+</dl>
+</section>
+<section id="id20">
+<h3>Returns:<a class="headerlink" href="#id20" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>B<span class="classifier">array</span></dt><dd><p>The B-field strengths of the magnetic stars</p>
+</dd>
+</dl>
+</section>
+<section id="id21">
+<h3>Notes:<a class="headerlink" href="#id21" title="Link to this heading"></a></h3>
+<p>Assign poisson distributed B-field strength for magnetic stars</p>
+</section>
+</dd></dl>
+
+<p id="module-MOSS.IMF">IMF.py</p>
+<p>This script holds IMFs as functions where inserted 
+total mass of a population gives a set of randomly 
+drawn masses for the stars following the IMF.</p>
+<p>Author:     Ylva Götberg
+Date:       22/6 - 2015</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="MOSS.IMF.Alt_Kroupa_IMF">
+<span class="sig-name descname"><span class="pre">Alt_Kroupa_IMF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">U_rdm_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mmin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mmax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a_gamma</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/MOSS/IMF.html#Alt_Kroupa_IMF"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#MOSS.IMF.Alt_Kroupa_IMF" title="Link to this definition"></a></dt>
+<dd><section id="id22">
+<h3>Parameters:<a class="headerlink" href="#id22" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>U_rdm_array<span class="classifier">array</span></dt><dd><p>Array of random numbers between 0 and 1</p>
+</dd>
+<dt>mmin<span class="classifier">float</span></dt><dd><p>Minimum mass of the population</p>
+</dd>
+<dt>mmax<span class="classifier">float</span></dt><dd><p>Maximum mass of the population</p>
+</dd>
+<dt>a_gamma<span class="classifier">float</span></dt><dd><p>Power of the IMF at high masses</p>
+</dd>
+</dl>
+</section>
+<section id="id23">
+<h3>Returns:<a class="headerlink" href="#id23" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>masses<span class="classifier">array</span></dt><dd><p>Array of masses drawn from the Kroupa IMF</p>
+</dd>
+</dl>
+</section>
+<section id="id24">
+<h3>Notes:<a class="headerlink" href="#id24" title="Link to this heading"></a></h3>
+<p>This function returns an array of masses drawn from
+the Kroupa IMF.</p>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MOSS.IMF.Kroupa_IMF">
+<span class="sig-name descname"><span class="pre">Kroupa_IMF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">U_rdm_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mmin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mmax</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/MOSS/IMF.html#Kroupa_IMF"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#MOSS.IMF.Kroupa_IMF" title="Link to this definition"></a></dt>
+<dd><section id="id25">
+<h3>Parameters:<a class="headerlink" href="#id25" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>U_rdm_array<span class="classifier">array</span></dt><dd><p>Array of random numbers between 0 and 1</p>
+</dd>
+<dt>mmin<span class="classifier">float</span></dt><dd><p>Minimum mass of the population</p>
+</dd>
+<dt>mmax<span class="classifier">float</span></dt><dd><p>Maximum mass of the population</p>
+</dd>
+</dl>
+</section>
+<section id="id26">
+<h3>Returns:<a class="headerlink" href="#id26" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>masses<span class="classifier">array</span></dt><dd><p>Array of masses drawn from the Kroupa IMF</p>
+</dd>
+</dl>
+</section>
+<section id="id27">
+<h3>Notes:<a class="headerlink" href="#id27" title="Link to this heading"></a></h3>
+<p>This function returns an array of masses drawn from
+the Kroupa IMF.</p>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MOSS.IMF.Salpeter_IMF">
+<span class="sig-name descname"><span class="pre">Salpeter_IMF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">U_rdm_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mmin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mmax</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/MOSS/IMF.html#Salpeter_IMF"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#MOSS.IMF.Salpeter_IMF" title="Link to this definition"></a></dt>
+<dd><section id="id28">
+<h3>Parameters:<a class="headerlink" href="#id28" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>U_rdm_array<span class="classifier">array</span></dt><dd><p>Array of random numbers between 0 and 1</p>
+</dd>
+<dt>mmin<span class="classifier">float</span></dt><dd><p>Minimum mass of the population</p>
+</dd>
+<dt>mmax<span class="classifier">float</span></dt><dd><p>Maximum mass of the population</p>
+</dd>
+</dl>
+</section>
+<section id="id29">
+<h3>Returns:<a class="headerlink" href="#id29" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>masses<span class="classifier">array</span></dt><dd><p>Array of masses drawn from the Salpeter IMF</p>
+</dd>
+</dl>
+</section>
+<section id="id30">
+<h3>Notes:<a class="headerlink" href="#id30" title="Link to this heading"></a></h3>
+<p>This function returns an array of masses drawn from
+the Salpeter IMF. The Salpeter IMF (Initial Mass Function)
+is a power law with a power of -2.35.</p>
+</section>
+</dd></dl>
+
+<dl class="py function" id="module-MOSS.locate_ZAMS">
+<dt class="sig sig-object py" id="MOSS.locate_ZAMS.locate_ZAMS">
+<span class="sig-name descname"><span class="pre">locate_ZAMS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logL</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logLnuc</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/MOSS/locate_ZAMS.html#locate_ZAMS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#MOSS.locate_ZAMS.locate_ZAMS" title="Link to this definition"></a></dt>
+<dd><section id="id31">
+<h3>Parameters:<a class="headerlink" href="#id31" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>logL<span class="classifier">array</span></dt><dd><p>The log10 of the luminosity</p>
+</dd>
+<dt>logLnuc<span class="classifier">array</span></dt><dd><p>The log10 of the nuclear luminosity</p>
+</dd>
+</dl>
+</section>
+<section id="id32">
+<h3>Returns:<a class="headerlink" href="#id32" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>index<span class="classifier">int</span></dt><dd><p>The index of the ZAMS</p>
+</dd>
+</dl>
+</section>
+<section id="id33">
+<h3>Notes:<a class="headerlink" href="#id33" title="Link to this heading"></a></h3>
+<p>This function returns the index of the ZAMS. The
+ZAMS is defined as the point where the nuclear
+luminosity is within 10% of the luminosity for
+more than 10 outputs in a row. The luminosity
+arrays are assumed to be given in log10(L/Lsun)
+and the nuclear luminosity arrays are assumed to
+be given in log10(Lnuc/Lsun).</p>
+</section>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="Installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Ylva Götberg.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

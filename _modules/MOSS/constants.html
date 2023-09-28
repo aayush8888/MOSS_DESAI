@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MOSS.constants &mdash; MOSS  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            MOSS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../chapters/Introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapters/Installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapters/MOSS.html"><code class="docutils literal notranslate"><span class="pre">MOSS</span></code> API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">MOSS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">MOSS.constants</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for MOSS.constants</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="constants">
+<a class="viewcode-back" href="../../chapters/MOSS.html#MOSS.constants.constants">[docs]</a>
+<span class="k">def</span> <span class="nf">constants</span><span class="p">():</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    = = = = = constants.py  = = = = = = = = = = = = = = </span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    -----------</span>
+<span class="sd">    None</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    --------</span>
+<span class="sd">    const : dict</span>
+<span class="sd">        Dictionary with constants in SI and cgs units.</span>
+<span class="sd">    </span>
+<span class="sd">    Notes:</span>
+<span class="sd">    ------</span>
+<span class="sd">    The constants are taken from the NIST website:</span>
+<span class="sd">    http://physics.nist.gov/cuu/Constants/index.html</span>
+
+<span class="sd">    </span>
+<span class="sd">    Author:     Ylva Götberg</span>
+<span class="sd">    Date:       8/7 - 2015                              </span>
+<span class="sd">    &quot;&quot;&quot;</span> 
+    
+    <span class="c1"># Boltzmann&#39;s constant</span>
+    <span class="n">kB_SI</span> <span class="o">=</span> <span class="mf">1.3806488e-23</span>
+    <span class="n">kB_cgs</span> <span class="o">=</span> <span class="mf">1.3806488e-16</span>
+
+    <span class="c1"># Electron volt in Joule</span>
+    <span class="n">eV_SI</span> <span class="o">=</span> <span class="mf">1.60217657e-19</span>
+    <span class="n">erg_SI</span> <span class="o">=</span> <span class="mf">1e-7</span>    <span class="c1"># 1 erg in Joules</span>
+    <span class="n">J_cgs</span> <span class="o">=</span> <span class="mf">1e7</span>      <span class="c1"># 1 Joule in ergs</span>
+
+    <span class="c1"># Planck&#39;s constant</span>
+    <span class="n">h_SI</span> <span class="o">=</span> <span class="mf">6.62606957e-34</span>
+    <span class="n">h_cgs</span> <span class="o">=</span> <span class="mf">6.62606957e-27</span>
+
+    <span class="c1"># Stefan Boltzmann constant    </span>
+    <span class="n">sigma_SB_SI</span> <span class="o">=</span> <span class="mf">5.670373e-8</span>
+    <span class="n">sigma_SB_cgs</span> <span class="o">=</span> <span class="mf">5.6704e-5</span>   
+    
+    <span class="c1"># Speed of light</span>
+    <span class="n">c_SI</span> <span class="o">=</span> <span class="mf">2.99792458e8</span>         <span class="c1"># m/s</span>
+    <span class="n">c_cgs</span> <span class="o">=</span> <span class="mf">2.99792458e10</span>    <span class="c1"># cm/s</span>
+
+    <span class="c1"># Ionising limits</span>
+    <span class="n">E_H_lim_eV</span> <span class="o">=</span> <span class="mf">13.5984</span>
+    <span class="n">E_H_lim_SI</span> <span class="o">=</span> <span class="n">E_H_lim_eV</span><span class="o">*</span><span class="n">eV_SI</span>
+    <span class="n">lam_H_lim_SI</span> <span class="o">=</span> <span class="n">h_SI</span><span class="o">*</span><span class="n">c_SI</span><span class="o">/</span><span class="n">E_H_lim_SI</span>
+    
+    <span class="n">E_HeI_lim_eV</span> <span class="o">=</span> <span class="mf">24.5874</span>
+    <span class="n">E_HeI_lim_SI</span> <span class="o">=</span> <span class="n">E_HeI_lim_eV</span><span class="o">*</span><span class="n">eV_SI</span>
+    <span class="n">lam_HeI_lim_SI</span> <span class="o">=</span> <span class="n">h_SI</span><span class="o">*</span><span class="n">c_SI</span><span class="o">/</span><span class="n">E_HeI_lim_SI</span>
+    
+    <span class="n">E_HeII_lim_eV</span> <span class="o">=</span> <span class="mf">54.417760</span>
+    <span class="n">E_HeII_lim_SI</span> <span class="o">=</span> <span class="n">E_HeII_lim_eV</span><span class="o">*</span><span class="n">eV_SI</span>
+    <span class="n">lam_HeII_lim_SI</span> <span class="o">=</span> <span class="n">h_SI</span><span class="o">*</span><span class="n">c_SI</span><span class="o">/</span><span class="n">E_HeII_lim_SI</span>
+    
+    <span class="c1"># Solar luminosity in SI</span>
+    <span class="n">LSun_SI</span> <span class="o">=</span> <span class="mf">3.846e26</span>     <span class="c1"># Watt</span>
+    <span class="n">LSun_cgs</span> <span class="o">=</span> <span class="n">LSun_SI</span><span class="o">*</span><span class="mf">1e7</span>   <span class="c1"># erg/s</span>
+    
+    <span class="c1"># Solar mass in SI</span>
+    <span class="n">MSun_SI</span> <span class="o">=</span> <span class="mf">1.989e30</span>     <span class="c1"># kg</span>
+    
+    <span class="c1"># Solar radius </span>
+    <span class="n">RSun_SI</span> <span class="o">=</span> <span class="mf">6.957e8</span>    <span class="c1"># meters</span>
+    <span class="n">RSun_AU</span> <span class="o">=</span> <span class="mf">0.0046491</span>    <span class="c1"># AU</span>
+    
+    <span class="c1"># Parsec in meters</span>
+    <span class="n">pc_SI</span> <span class="o">=</span> <span class="mf">3.08567758149137e16</span>
+    
+    <span class="c1"># AU in meters</span>
+    <span class="n">AU_SI</span> <span class="o">=</span> <span class="mf">1.496e+11</span>
+
+    <span class="c1"># Gravitational constant</span>
+    <span class="n">G_SI</span> <span class="o">=</span> <span class="mf">6.67408e-11</span>		<span class="c1"># m^3 kg^-1 s^-2</span>
+    <span class="n">G_cgs</span> <span class="o">=</span> <span class="mf">6.67408e-8</span>		<span class="c1"># cm^3 g^-1 s^-2</span>
+    <span class="n">G_Eorb</span> <span class="o">=</span> <span class="mi">4</span><span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">**</span><span class="mf">2.0</span><span class="p">)</span>     <span class="c1"># AU^3 MSun^-1 yr^-2</span>
+    <span class="n">G_orb_days</span> <span class="o">=</span> <span class="n">G_Eorb</span><span class="o">/</span><span class="p">(</span><span class="mf">365.25</span><span class="o">**</span><span class="mf">2.0</span><span class="p">)</span>     <span class="c1"># AU^3 MSun^-1 days^-2</span>
+    
+    <span class="c1"># Time units</span>
+    <span class="n">yr_SI</span> <span class="o">=</span> <span class="mf">365.25</span><span class="o">*</span><span class="mf">24.</span><span class="o">*</span><span class="mf">60.</span><span class="o">*</span><span class="mf">60.</span>     <span class="c1"># Years in seconds</span>
+    <span class="n">day_SI</span> <span class="o">=</span> <span class="mf">24.</span><span class="o">*</span><span class="mf">60.</span><span class="o">*</span><span class="mf">60.</span>
+    
+    <span class="n">const</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">h_SI</span><span class="o">=</span><span class="n">h_SI</span><span class="p">,</span><span class="n">h_cgs</span><span class="o">=</span><span class="n">h_cgs</span><span class="p">,</span><span class="n">sigma_SB_SI</span><span class="o">=</span><span class="n">sigma_SB_SI</span><span class="p">,</span><span class="n">sigma_SB_cgs</span><span class="o">=</span><span class="n">sigma_SB_cgs</span><span class="p">,</span>
+                 <span class="n">c_SI</span><span class="o">=</span><span class="n">c_SI</span><span class="p">,</span> <span class="n">c_cgs</span><span class="o">=</span><span class="n">c_cgs</span><span class="p">,</span> <span class="n">kB_SI</span><span class="o">=</span><span class="n">kB_SI</span><span class="p">,</span> <span class="n">kB_cgs</span><span class="o">=</span><span class="n">kB_cgs</span><span class="p">,</span> <span class="n">eV_SI</span><span class="o">=</span><span class="n">eV_SI</span><span class="p">,</span> <span class="n">E_H_lim_eV</span><span class="o">=</span><span class="n">E_H_lim_eV</span><span class="p">,</span> 
+                 <span class="n">E_HeI_lim_eV</span><span class="o">=</span><span class="n">E_HeI_lim_eV</span><span class="p">,</span> <span class="n">E_HeII_lim_eV</span><span class="o">=</span><span class="n">E_HeII_lim_eV</span><span class="p">,</span> 
+                 <span class="n">E_H_lim_SI</span><span class="o">=</span><span class="n">E_H_lim_SI</span><span class="p">,</span> <span class="n">E_HeI_lim_SI</span><span class="o">=</span><span class="n">E_HeI_lim_SI</span><span class="p">,</span> 
+                 <span class="n">E_HeII_lim_SI</span><span class="o">=</span><span class="n">E_HeII_lim_SI</span><span class="p">,</span> <span class="n">lam_H_lim_SI</span><span class="o">=</span><span class="n">lam_H_lim_SI</span><span class="p">,</span> 
+                 <span class="n">lam_HeI_lim_SI</span><span class="o">=</span><span class="n">lam_HeI_lim_SI</span><span class="p">,</span> <span class="n">lam_HeII_lim_SI</span><span class="o">=</span><span class="n">lam_HeII_lim_SI</span><span class="p">,</span>
+                 <span class="n">RSun_SI</span><span class="o">=</span><span class="n">RSun_SI</span><span class="p">,</span> <span class="n">RSun_AU</span><span class="o">=</span><span class="n">RSun_AU</span><span class="p">,</span> <span class="n">pc_SI</span><span class="o">=</span><span class="n">pc_SI</span><span class="p">,</span> <span class="n">AU_SI</span><span class="o">=</span><span class="n">AU_SI</span><span class="p">,</span> <span class="n">G_SI</span><span class="o">=</span><span class="n">G_SI</span><span class="p">,</span> 
+                 <span class="n">G_cgs</span><span class="o">=</span><span class="n">G_cgs</span><span class="p">,</span> <span class="n">G_Eorb</span><span class="o">=</span><span class="n">G_Eorb</span><span class="p">,</span> <span class="n">G_orb_days</span><span class="o">=</span><span class="n">G_orb_days</span><span class="p">,</span> 
+                 <span class="n">LSun_SI</span><span class="o">=</span><span class="n">LSun_SI</span><span class="p">,</span> <span class="n">LSun_cgs</span><span class="o">=</span><span class="n">LSun_cgs</span><span class="p">,</span> <span class="n">MSun_SI</span><span class="o">=</span><span class="n">MSun_SI</span><span class="p">,</span> <span class="n">yr_SI</span><span class="o">=</span><span class="n">yr_SI</span><span class="p">,</span> <span class="n">day_SI</span><span class="o">=</span><span class="n">day_SI</span><span class="p">,</span>
+                 <span class="n">erg_SI</span><span class="o">=</span><span class="n">erg_SI</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">const</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Ylva Götberg.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
