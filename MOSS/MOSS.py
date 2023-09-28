@@ -2,11 +2,11 @@
 # coding: utf-8
 
 
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+"""
 #                                                                             #
 #                        MOSS, part 1                                         # 
 #                                                                             #
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
 #                                                                             #
 # version 1.0                                                                 #
 # Ylva Gotberg, 27 August 2019                                                #
@@ -24,7 +24,7 @@
 # population taking a Monte Carlo approach and saves the results to           #
 # text-files.                                                                 #
 #                                                                             #
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+"""
 
 
 # Packages needed for running

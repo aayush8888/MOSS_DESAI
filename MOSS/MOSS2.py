@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+"""
 #                                                                             #
 #                        MOSS, part 2                                         # 
 #                                                                             #
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 #                                                                             #
 # version 1.0                                                                 #
 # Ylva Gotberg, 8 October 2019                                                #
@@ -32,7 +31,7 @@
 # - restructuring to work for very large data1-files - Ylva, 14 August 2020   #
 # - giving up on saving spectra and just interpolate over magnitudes - Ylva, 17 August 2020
 #                                                                             #
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+"""
 
 
 # Packages needed for running

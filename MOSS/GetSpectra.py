@@ -1,8 +1,35 @@
-# This function is meant to just give you the spectral energy distribution and the normalized spectrum
-# It is created for CMFGEN models and assuming that you already created the obs and obs_cont directories with including spectra
+# -*- coding: utf-8 -*-
+import numpy as np
 def GetSpectra(loc_mod,file_type):
+    """
     
-    import numpy as np
+    Parameters:
+    -----------
+    loc_mod : string
+        The location of the model
+    file_type : string
+        The type of file to be read. Either 'obs' or 'OBSFLUX'
+
+    Returns:
+    --------
+    lambda_mod : array
+        The wavelengths in Angstrom
+    Flambda_mod : array
+        The fluxes in erg s^-1 cm^-2 A^-1
+    Fnorm_mod : array
+        The normalized fluxes
+    Flambda_cont : array
+        The continuum fluxes in erg s^-1 cm^-2 A^-1
+
+    Notes:
+    ------
+    This function reads the output files for a given
+    CMFGEN model and returns the wavelengths, frequencies
+    and fluxes (Fnu and Flambda). The fluxes are assumed
+    that all emission is seen (no 1 kpc assumption or
+    similar). They are created for CMFGEN models and assuming that 
+    you already created the obs and obs_cont directories with the spectra.
+    """
     #from GetCMFGENflux import GetCMFGENflux
     from constants import constants
     

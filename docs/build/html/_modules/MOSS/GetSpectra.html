@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MOSS.GetSpectra &mdash; MOSS  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            MOSS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../chapters/MOSS.html"><code class="docutils literal notranslate"><span class="pre">MOSS</span></code> API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">MOSS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">MOSS.GetSpectra</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for MOSS.GetSpectra</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<div class="viewcode-block" id="GetSpectra">
+<a class="viewcode-back" href="../../chapters/MOSS.html#MOSS.GetSpectra.GetSpectra">[docs]</a>
+<span class="k">def</span> <span class="nf">GetSpectra</span><span class="p">(</span><span class="n">loc_mod</span><span class="p">,</span><span class="n">file_type</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">    -----------</span>
+<span class="sd">    loc_mod : string</span>
+<span class="sd">        The location of the model</span>
+<span class="sd">    file_type : string</span>
+<span class="sd">        The type of file to be read. Either &#39;obs&#39; or &#39;OBSFLUX&#39;</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    --------</span>
+<span class="sd">    lambda_mod : array</span>
+<span class="sd">        The wavelengths in Angstrom</span>
+<span class="sd">    Flambda_mod : array</span>
+<span class="sd">        The fluxes in erg s^-1 cm^-2 A^-1</span>
+<span class="sd">    Fnorm_mod : array</span>
+<span class="sd">        The normalized fluxes</span>
+<span class="sd">    Flambda_cont : array</span>
+<span class="sd">        The continuum fluxes in erg s^-1 cm^-2 A^-1</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">    ------</span>
+<span class="sd">    This function reads the output files for a given</span>
+<span class="sd">    CMFGEN model and returns the wavelengths, frequencies</span>
+<span class="sd">    and fluxes (Fnu and Flambda). The fluxes are assumed</span>
+<span class="sd">    that all emission is seen (no 1 kpc assumption or</span>
+<span class="sd">    similar). They are created for CMFGEN models and assuming that </span>
+<span class="sd">    you already created the obs and obs_cont directories with the spectra.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1">#from GetCMFGENflux import GetCMFGENflux</span>
+    <span class="kn">from</span> <span class="nn">constants</span> <span class="kn">import</span> <span class="n">constants</span>
+    
+    <span class="c1"># Get some constants</span>
+    <span class="n">cste</span> <span class="o">=</span> <span class="n">constants</span><span class="p">()</span>
+    <span class="n">c_SI</span> <span class="o">=</span> <span class="n">cste</span><span class="p">[</span><span class="s1">&#39;c_SI&#39;</span><span class="p">]</span>
+    
+    <span class="k">if</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s1">&#39;obs&#39;</span><span class="p">:</span>
+
+        <span class="c1"># Just assuming that the spectra are here</span>
+        <span class="n">obs_name</span> <span class="o">=</span> <span class="n">loc_mod</span><span class="o">+</span><span class="s1">&#39;/obs/obs_fin&#39;</span>
+        <span class="n">obs_cont</span> <span class="o">=</span> <span class="n">loc_mod</span><span class="o">+</span><span class="s1">&#39;/obs_cont/obs_cont&#39;</span>
+
+
+        <span class="c1"># # # # # THE SPECTRUM # # # # # </span>
+        <span class="c1"># Open the obs_fin file</span>
+        <span class="n">fid</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">obs_name</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+        <span class="n">spec</span> <span class="o">=</span> <span class="n">fid</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+        <span class="n">fid</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="c1"># Storage for the frequency and flux</span>
+        <span class="n">freq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="n">Fnu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="n">type_content</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="c1"># Loop over the content of the obs_fin file to get the frequencies and fluxes</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">spec</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">spec</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">:</span>
+                <span class="c1"># Read frequencies in unit 10^15 Hz</span>
+                <span class="k">if</span> <span class="s1">&#39;Continuum Frequencies&#39;</span> <span class="ow">in</span> <span class="n">spec</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                    <span class="n">type_content</span> <span class="o">=</span> <span class="s1">&#39;freq&#39;</span>
+                <span class="c1"># Read flux at 1 kpc in unit Janskys (1e-23 erg s^-1 cm^-2 Hz^-1)</span>
+                <span class="k">elif</span> <span class="s1">&#39;Observed intensity&#39;</span> <span class="ow">in</span> <span class="n">spec</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                    <span class="n">type_content</span> <span class="o">=</span> <span class="s1">&#39;fnu&#39;</span>
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">type_content</span> <span class="o">==</span> <span class="s1">&#39;freq&#39;</span><span class="p">:</span>
+                        <span class="n">tmp</span> <span class="o">=</span> <span class="n">spec</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tmp</span><span class="p">)):</span>
+                            <span class="k">if</span> <span class="p">(</span><span class="s1">&#39;-&#39;</span> <span class="ow">in</span> <span class="n">tmp</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="ow">and</span> <span class="p">((</span><span class="s1">&#39;E&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tmp</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="ow">and</span> <span class="p">(</span><span class="s1">&#39;D&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tmp</span><span class="p">[</span><span class="n">k</span><span class="p">])):</span>
+                                <span class="n">tmp</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">,</span><span class="s1">&#39;E-&#39;</span><span class="p">)</span>
+                        <span class="n">freq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">freq</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">(</span><span class="n">tmp</span><span class="p">)])</span>
+                    <span class="k">elif</span> <span class="n">type_content</span> <span class="o">==</span> <span class="s1">&#39;fnu&#39;</span><span class="p">:</span>
+                        <span class="n">tmp</span> <span class="o">=</span> <span class="n">spec</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tmp</span><span class="p">)):</span>
+                            <span class="k">if</span> <span class="p">(</span><span class="s1">&#39;-&#39;</span> <span class="ow">in</span> <span class="n">tmp</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="ow">and</span> <span class="p">((</span><span class="s1">&#39;E&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tmp</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="ow">and</span> <span class="p">(</span><span class="s1">&#39;D&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tmp</span><span class="p">[</span><span class="n">k</span><span class="p">])):</span>
+                                <span class="n">tmp</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">,</span><span class="s1">&#39;E-&#39;</span><span class="p">)</span>
+                        <span class="n">Fnu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">Fnu</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">(</span><span class="n">tmp</span><span class="p">)])</span>
+
+        <span class="c1"># Convert frequencies to wavelengths in Angstrom</span>
+        <span class="n">lambda_mod</span> <span class="o">=</span> <span class="p">(</span><span class="n">c_SI</span><span class="o">/</span><span class="p">(</span><span class="n">freq</span><span class="o">*</span><span class="mf">1e15</span><span class="p">))</span><span class="o">*</span><span class="mf">1e10</span>   
+
+        <span class="c1"># Convert F_nu to F_lambda in cgs units</span>
+        <span class="n">Fnu_SI</span> <span class="o">=</span> <span class="n">Fnu</span><span class="o">*</span><span class="p">(</span><span class="mf">1e-26</span><span class="p">)</span>  <span class="c1"># W m^-2 Hz^-1</span>
+        <span class="n">lambda_SI</span> <span class="o">=</span> <span class="n">lambda_mod</span><span class="o">/</span><span class="mf">1e10</span>   <span class="c1"># meters</span>
+        <span class="n">Flambda_SI</span> <span class="o">=</span> <span class="p">(</span><span class="n">freq</span><span class="o">*</span><span class="mf">1e15</span><span class="p">)</span><span class="o">*</span><span class="n">Fnu_SI</span><span class="o">/</span><span class="n">lambda_SI</span>    <span class="c1"># W m^-3 at 1 kpc</span>
+        <span class="n">Flambda_mod</span> <span class="o">=</span> <span class="n">Flambda_SI</span><span class="o">/</span><span class="mf">1e7</span>   <span class="c1"># erg s^-1 cm^-2 A^-1 at 1 kpc</span>
+
+
+
+        <span class="c1"># # # # # THE CONTINUUM # # # # # </span>
+        <span class="c1"># Open the obs_cont file</span>
+        <span class="n">fid</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">obs_cont</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+        <span class="n">cont</span> <span class="o">=</span> <span class="n">fid</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+        <span class="n">fid</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="c1"># Storage for the frequency and flux</span>
+        <span class="n">freq_cont</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="n">Fnu_cont</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="n">type_content</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="c1"># Loop over the content of the obs_fin file to get the frequencies and fluxes</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cont</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">spec</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">:</span>
+                <span class="c1"># Read frequencies in unit 10^15 Hz</span>
+                <span class="k">if</span> <span class="s1">&#39;Continuum Frequencies&#39;</span> <span class="ow">in</span> <span class="n">cont</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                    <span class="n">type_content</span> <span class="o">=</span> <span class="s1">&#39;freq&#39;</span>
+                <span class="c1"># Read flux at 1 kpc in unit Janskys (1e-23 erg s^-1 cm^-2 Hz^-1)</span>
+                <span class="k">elif</span> <span class="s1">&#39;Observed intensity&#39;</span> <span class="ow">in</span> <span class="n">cont</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                    <span class="n">type_content</span> <span class="o">=</span> <span class="s1">&#39;fnu&#39;</span>
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">type_content</span> <span class="o">==</span> <span class="s1">&#39;freq&#39;</span><span class="p">:</span>
+                        <span class="n">tmp</span> <span class="o">=</span> <span class="n">cont</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tmp</span><span class="p">)):</span>
+                            <span class="k">if</span> <span class="p">(</span><span class="s1">&#39;-&#39;</span> <span class="ow">in</span> <span class="n">tmp</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="ow">and</span> <span class="p">((</span><span class="s1">&#39;E&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tmp</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="ow">and</span> <span class="p">(</span><span class="s1">&#39;D&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tmp</span><span class="p">[</span><span class="n">k</span><span class="p">])):</span>
+                                <span class="n">tmp</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">,</span><span class="s1">&#39;E-&#39;</span><span class="p">)</span>
+                        <span class="n">freq_cont</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">freq_cont</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">(</span><span class="n">tmp</span><span class="p">)])</span>
+                    <span class="k">elif</span> <span class="n">type_content</span> <span class="o">==</span> <span class="s1">&#39;fnu&#39;</span><span class="p">:</span>
+                        <span class="n">tmp</span> <span class="o">=</span> <span class="n">cont</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tmp</span><span class="p">)):</span>
+                            <span class="k">if</span> <span class="p">(</span><span class="s1">&#39;-&#39;</span> <span class="ow">in</span> <span class="n">tmp</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="ow">and</span> <span class="p">((</span><span class="s1">&#39;E&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tmp</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="ow">and</span> <span class="p">(</span><span class="s1">&#39;D&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tmp</span><span class="p">[</span><span class="n">k</span><span class="p">])):</span>
+                                <span class="n">tmp</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">,</span><span class="s1">&#39;E-&#39;</span><span class="p">)</span>
+                        <span class="n">Fnu_cont</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">Fnu_cont</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">(</span><span class="n">tmp</span><span class="p">)])</span>
+
+        <span class="c1"># Convert frequencies to wavelengths in Angstrom</span>
+        <span class="n">lambda_cont</span> <span class="o">=</span> <span class="p">(</span><span class="n">c_SI</span><span class="o">/</span><span class="p">(</span><span class="n">freq_cont</span><span class="o">*</span><span class="mf">1e15</span><span class="p">))</span><span class="o">*</span><span class="mf">1e10</span>   
+
+        <span class="c1"># Convert F_nu to F_lambda in cgs units</span>
+        <span class="n">Fnu_cont_SI</span> <span class="o">=</span> <span class="n">Fnu_cont</span><span class="o">*</span><span class="p">(</span><span class="mf">1e-26</span><span class="p">)</span>  <span class="c1"># W m^-2 Hz^-1</span>
+        <span class="n">lambda_cont_SI</span> <span class="o">=</span> <span class="n">lambda_cont</span><span class="o">/</span><span class="mf">1e10</span>   <span class="c1"># meters</span>
+        <span class="n">Flambda_cont_SI</span> <span class="o">=</span> <span class="p">(</span><span class="n">freq_cont</span><span class="o">*</span><span class="mf">1e15</span><span class="p">)</span><span class="o">*</span><span class="n">Fnu_cont_SI</span><span class="o">/</span><span class="n">lambda_cont_SI</span>    <span class="c1"># W m^-3 at 1 kpc</span>
+        <span class="n">Flambda_cont</span> <span class="o">=</span> <span class="n">Flambda_cont_SI</span><span class="o">/</span><span class="mf">1e7</span>   <span class="c1"># erg s^-1 cm^-2 A^-1 at 1 kpc    </span>
+
+
+
+
+        <span class="c1"># # # # # THE NORMALIZED SPECTRUM # # # # # </span>
+
+        <span class="c1"># Need to first interpolate the continuum to the wavelength array of the SED</span>
+        <span class="n">Flambda_cont_interp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">lambda_mod</span><span class="p">,</span><span class="n">lambda_cont</span><span class="p">,</span><span class="n">Flambda_cont</span><span class="p">)</span>
+        <span class="n">Fnorm_mod</span> <span class="o">=</span> <span class="n">Flambda_mod</span><span class="o">/</span><span class="n">Flambda_cont_interp</span>
+
+
+        <span class="k">return</span> <span class="n">lambda_mod</span><span class="p">,</span> <span class="n">Flambda_mod</span><span class="p">,</span> <span class="n">Fnorm_mod</span><span class="p">,</span> <span class="n">Flambda_cont</span>
+    
+    
+    <span class="c1"># This option is available for checking the where luminosity error comes from</span>
+    <span class="k">elif</span> <span class="n">file_type</span> <span class="o">==</span>  <span class="s1">&#39;OBSFLUX&#39;</span><span class="p">:</span>
+        
+        <span class="c1"># Location of the OBSFLUX file</span>
+        <span class="n">obsflux</span> <span class="o">=</span> <span class="n">loc_mod</span><span class="o">+</span><span class="s1">&#39;/OBSFLUX&#39;</span>
+
+
+        <span class="c1"># # # # # THE SPECTRUM # # # # # </span>
+        <span class="c1"># Open the obs_fin file</span>
+        <span class="n">fid</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">obsflux</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+        <span class="n">spec</span> <span class="o">=</span> <span class="n">fid</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+        <span class="n">fid</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="c1"># Storage for the frequency and flux</span>
+        <span class="n">freq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="n">Fnu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="n">type_content</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="c1"># Loop over the content of the obs_fin file to get the frequencies and fluxes</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">spec</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">spec</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">:</span>
+                <span class="c1"># Read frequencies in unit 10^15 Hz</span>
+                <span class="k">if</span> <span class="s1">&#39;Continuum Frequencies&#39;</span> <span class="ow">in</span> <span class="n">spec</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                    <span class="n">type_content</span> <span class="o">=</span> <span class="s1">&#39;freq&#39;</span>
+                <span class="c1"># Read flux at 1 kpc in unit Janskys (1e-23 erg s^-1 cm^-2 Hz^-1)</span>
+                <span class="k">elif</span> <span class="s1">&#39;Observed intensity&#39;</span> <span class="ow">in</span> <span class="n">spec</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                    <span class="n">type_content</span> <span class="o">=</span> <span class="s1">&#39;fnu&#39;</span>
+                    
+                <span class="k">elif</span> <span class="s1">&#39;Luminosity&#39;</span> <span class="ow">in</span> <span class="n">spec</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                    <span class="n">type_content</span> <span class="o">=</span> <span class="s1">&#39;luminosity&#39;</span>
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">type_content</span> <span class="o">==</span> <span class="s1">&#39;freq&#39;</span><span class="p">:</span>
+                        <span class="n">tmp</span> <span class="o">=</span> <span class="n">spec</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tmp</span><span class="p">)):</span>
+                            <span class="k">if</span> <span class="p">(</span><span class="s1">&#39;-&#39;</span> <span class="ow">in</span> <span class="n">tmp</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="ow">and</span> <span class="p">((</span><span class="s1">&#39;E&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tmp</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="ow">and</span> <span class="p">(</span><span class="s1">&#39;D&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tmp</span><span class="p">[</span><span class="n">k</span><span class="p">])):</span>
+                                <span class="n">tmp</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">,</span><span class="s1">&#39;E-&#39;</span><span class="p">)</span>
+                        <span class="n">freq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">freq</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">(</span><span class="n">tmp</span><span class="p">)])</span>
+                    <span class="k">elif</span> <span class="n">type_content</span> <span class="o">==</span> <span class="s1">&#39;fnu&#39;</span><span class="p">:</span>
+                        <span class="n">tmp</span> <span class="o">=</span> <span class="n">spec</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tmp</span><span class="p">)):</span>
+                            <span class="k">if</span> <span class="p">(</span><span class="s1">&#39;-&#39;</span> <span class="ow">in</span> <span class="n">tmp</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="ow">and</span> <span class="p">((</span><span class="s1">&#39;E&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tmp</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="ow">and</span> <span class="p">(</span><span class="s1">&#39;D&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tmp</span><span class="p">[</span><span class="n">k</span><span class="p">])):</span>
+                                <span class="n">tmp</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">,</span><span class="s1">&#39;E-&#39;</span><span class="p">)</span>
+                        <span class="n">Fnu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">Fnu</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">(</span><span class="n">tmp</span><span class="p">)])</span>
+
+        <span class="c1"># Convert frequencies to wavelengths in Angstrom</span>
+        <span class="n">lambda_mod</span> <span class="o">=</span> <span class="p">(</span><span class="n">c_SI</span><span class="o">/</span><span class="p">(</span><span class="n">freq</span><span class="o">*</span><span class="mf">1e15</span><span class="p">))</span><span class="o">*</span><span class="mf">1e10</span>   
+
+        <span class="c1"># Convert F_nu to F_lambda in cgs units</span>
+        <span class="n">Fnu_SI</span> <span class="o">=</span> <span class="n">Fnu</span><span class="o">*</span><span class="p">(</span><span class="mf">1e-26</span><span class="p">)</span>  <span class="c1"># W m^-2 Hz^-1</span>
+        <span class="n">lambda_SI</span> <span class="o">=</span> <span class="n">lambda_mod</span><span class="o">/</span><span class="mf">1e10</span>   <span class="c1"># meters</span>
+        <span class="n">Flambda_SI</span> <span class="o">=</span> <span class="p">(</span><span class="n">freq</span><span class="o">*</span><span class="mf">1e15</span><span class="p">)</span><span class="o">*</span><span class="n">Fnu_SI</span><span class="o">/</span><span class="n">lambda_SI</span>    <span class="c1"># W m^-3 at 1 kpc</span>
+        <span class="n">Flambda_mod</span> <span class="o">=</span> <span class="n">Flambda_SI</span><span class="o">/</span><span class="mf">1e7</span>   <span class="c1"># erg s^-1 cm^-2 A^-1 at 1 kpc  </span>
+        
+        <span class="k">return</span> <span class="n">lambda_mod</span><span class="p">,</span> <span class="n">Flambda_mod</span></div>
+
+        
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Ylva Götberg.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,26 +1,63 @@
 # -*- coding: utf-8 -*-
+# Import some packages
+import numpy as np
+from integrate_BB_star import integrate_BB_star
+from GetCMFGENflux import GetCMFGENflux
+from constants import constants
 
-""" = = = = = GetQs_CMFGEN.py = = = = = = = = = = = = = """
-
-""" This function reads the given CMFGEN model and 
-    returns the blackbody (B_lambda) and Q0, Q1 and Q2. 
-    The method relies on the effective temperature in 
-    the VADAT file, if it is not specified the temperature
-    must be given to this function.
-    
-    Author:     Ylva Götberg
-    Date:       27/10 - 2015                            """
-""" = = = = = = = = = = = = = = = = = = = = = = = = = = """
 
 def GetQs_CMFGEN(model_loc, Teff):
+    """
+    
+    Parameters:
+    -----------
+    model_loc : string
+        The location of the model
+    Teff : float
+        The effective temperature of the star
 
-    # Import some packages
-    import numpy as np
+    Returns:
+    --------
+    B_lambda : array
+        The blackbody emission in W m^-1
+    Q0_bb : float
+        The rate of emitted hydrogen ionising photons from the blackbody
+    Q1_bb : float
+        The rate of emitted HeI ionising photons from the blackbody
+    Q2_bb : float
+        The rate of emitted HeII ionising photons from the blackbody
+    Q0_s : float
+        The rate of emitted hydrogen ionising photons from the spectrum
+    Q1_s : float
+        The rate of emitted HeI ionising photons from the spectrum
+    Q2_s : float
+        The rate of emitted HeII ionising photons from the spectrum
+    
+    Notes:
+    ------
+    This function reads the output files for a given
+    CMFGEN model and returns the blackbody emission
+    and the rate of emitted ionising photons. The
+    rate of emitted ionising photons are calculated
+    by integrating the spectrum and the blackbody
+    emission from the given model. The integration
+    is done from the ionising limit to infinity.
+    The blackbody emission is calculated from the
+    effective temperature and radius given in the
+    VADAT file. If it is not specified the temperature
+    must be given to this function. The spectrum is read from the
+    obs_fin file. 
+    
+
+    Author:     Ylva Götberg
+    Date:       27/10 - 2015   
+
+    """
+
+
     
     # Some of my own packages
-    from integrate_BB_star import integrate_BB_star
-    from GetCMFGENflux import GetCMFGENflux
-    from constants import constants
+
     cstes = constants()
     h_SI = cstes['h_SI']
     c_SI = cstes['c_SI']

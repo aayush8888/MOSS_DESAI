@@ -1,13 +1,63 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+import numpy as np
+import astropy.units as u
 # # # # More simple: GetCorners
 # Another function that gets the corners of the interpolation grid in T and log g
 def GetCorners(Tstar,log_g,T_Kurucz,log_g_Kurucz):
+    """
 
-    # Some packages
-    import numpy as np
-    import astropy.units as u
+    Parameters:
+    -----------
+    Tstar : array
+        The temperatures of the stars
+    log_g : array
+        The surface gravities of the stars
+    T_Kurucz : array
+        The temperatures of the Kurucz models
+    log_g_Kurucz : array
+        The surface gravities of the Kurucz models
+    
+    Returns:
+    --------
+    ind_c1 : array
+        The indices of the corners of the Kurucz grid
+    ind_c2 : array
+        The indices of the corners of the Kurucz grid
+    ind_c3 : array
+        The indices of the corners of the Kurucz grid
+    ind_c4 : array
+        The indices of the corners of the Kurucz grid
+    f1 : array
+        The interpolation factors for the Kurucz grid
+    f2 : array
+        The interpolation factors for the Kurucz grid
+    ind_Kurucz_possible : array
+        The indices of the stars that are covered by the Kurucz grid
+    
+    Notes:
+    ------
+    This function finds the indices of the corners of the Kurucz grid
+    for the given stars. It also finds the interpolation factors for
+    the Kurucz grid. The interpolation is done in log T and log g.
+    The interpolation is done in the following way:
+    f1 = (T1-T2)/(T3-T2)
+    f2 = (g1-g2)/(g3-g2)
+    where T1 and T2 are the temperatures of the star and the two
+    Kurucz models closest to the star, and T3 is the temperature of
+    the Kurucz model closest to the star but with a higher temperature.
+    The same goes for the surface gravity.
+    The indices of the corners are:
+    c1 = (T1,g1)
+    c2 = (T1,g2)
+    c3 = (T3,g2)
+    c4 = (T3,g1)
+    where T1 and T3 are the temperatures of the Kurucz models closest
+    to the star but with a lower and higher temperature, respectively.
+    The same goes for the surface gravity.
+
+    """
+
     RSun_SI = u.R_sun.to(u.m)          # Solar radius in meters
 
     # Find the closest temperatures and surface gravities for the different models

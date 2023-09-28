@@ -1,21 +1,42 @@
 # -*- coding: utf-8 -*-
-"""
-"""
+import numpy as np
 
-""" = = = = = locate_ZAMS.py  = = = = = = = = = = = = = """
 
-""" This function returns the index in data arrays which
+""" 
+    locate_ZAMS.py
+    This function returns the index in data arrays which
     corresponds to the ZAMS. 
     
     Author:     Ylva Götberg
-    Date:       21/4 - 2015                             """
-""" = = = = = = = = = = = = = = = = = = = = = = = = = = """
+    Date:       21/4 - 2015                             
+"""
 
 # Define as a function
 def locate_ZAMS(logL, logLnuc):
+    """
+    
+    Parameters:
+    -----------
+    logL : array
+        The log10 of the luminosity
+    logLnuc : array
+        The log10 of the nuclear luminosity
 
-    # Import some packages
-    import numpy as np
+    Returns:
+    --------
+    index : int
+        The index of the ZAMS
+
+    Notes:
+    ------
+    This function returns the index of the ZAMS. The
+    ZAMS is defined as the point where the nuclear
+    luminosity is within 10% of the luminosity for
+    more than 10 outputs in a row. The luminosity
+    arrays are assumed to be given in log10(L/Lsun)
+    and the nuclear luminosity arrays are assumed to
+    be given in log10(Lnuc/Lsun). 
+    """
     
     # Create Lnuc/L
     Lnuc_div_L = (10**logLnuc)/(10**logL)

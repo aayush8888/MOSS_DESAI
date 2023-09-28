@@ -3,6 +3,31 @@ import numpy as np
 import copy
 
 def extrapolate(x, y, xmod, ymod):
+    """
+
+    Parameters:
+    -----------
+    x : array
+        The x-values of the model data
+    y : array
+        The y-values of the model data
+    xmod : array
+        The x-values of the model to extrapolate from
+    ymod : array
+        The y-values of the model to extrapolate from
+    
+    Returns:
+    --------
+    y_new : array
+        The extrapolated y-values
+    
+    Notes:
+    ------
+    This function extrapolates the model data to the limits of the model.
+    The extrapolation is done by fitting a straight line to the two points
+    closest to the limit and then extrapolating from that line.
+
+    """
     
     # Sort the model data to extrapolate from 
     x = np.array(x)

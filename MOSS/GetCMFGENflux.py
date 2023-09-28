@@ -1,28 +1,48 @@
 # -*- coding: utf-8 -*-
+import numpy as np
+from sympy import cos, atan, sqrt, N
+from constants import constants
 
-""" = = = = = GetCMFGENflux.py  = = = = = = = = = = = = """
+# Give as input a string with the location of the model
+def GetCMFGENflux(model_loc,file_flux):
+    """
+    
+    Parameters:
+    -----------
+    model_loc : string
+        The location of the model
+    file_flux : string
+        The file with the fluxes
 
-""" This function reads the output files for a given 
+    Returns:
+    --------
+    Flux_lambda_SI_full : array
+        The fluxes in W m^-1
+    lambda_SI : array
+        The wavelengths in meter
+    Flux_nu_SI_full : array
+        The fluxes in W Hz^-1
+    freq_SI : array
+        The frequencies in Hz
+    Flambda_cgs : array
+        The fluxes in erg s^-1 cm^-2 Å^-1
+    Fnu_cgs : array
+        The fluxes in erg s^-1 cm^-2 Hz^-1
+
+    Notes:
+    ------
+    This function reads the output files for a given 
     CMFGEN model and returns the wavelengths, frequencies
     and fluxes (Fnu and Flambda). The fluxes are assumed 
     that all emission is seen (no 1 kpc assumption or 
     similar). All returned variables are given in SI 
     units, sort of. Wavelength is in meters, frequency in
     hertz, Flambda in W m^-1 and Fnu in W Hz^-1.
-    
-    Author:     Ylva Götberg
-    Date:       28/9 - 2015                             """
-""" = = = = = = = = = = = = = = = = = = = = = = = = = = """
 
-# Give as input a string with the location of the model
-def GetCMFGENflux(model_loc,file_flux):
+    Author:     Ylva Götberg
+    Date:       28/9 - 2015    
+    """
     
-    # Import some packages
-    import numpy as np
-    from sympy import cos, atan, sqrt, N
-    
-    # Own packages
-    from constants import constants
     cstes = constants()
     c_SI = cstes['c_SI']
     pc_SI = cstes['pc_SI']

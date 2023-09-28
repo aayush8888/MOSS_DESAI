@@ -1,24 +1,33 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Sun Dec 14 16:16:55 2014
-
-@author: ylva
-"""
-
-""" = = = = = GetColumnMESAhist.py  = = = = = = = = = = """
-
-""" This function reads a specified history.data file 
-    from the MESA output and gives the desired columns
-    back.
-    
-    Author:     Ylva Götberg
-    Date:       14/12 - 2014                             """
-""" = = = = = = = = = = = = = = = = = = = = = = = = = = """
 
 import numpy as np
 
 # This is a function
 def GetColumnMESAhist(filename_history,col):
+    """
+    
+    Parameters:
+    -----------
+    filename_history : string
+        The location of the history.data file
+    col : list
+        The columns to be read from the history.data file
+
+    Returns:
+    --------
+    data_cols : list
+        The columns from the history.data file
+
+    Notes:
+    ------
+    This function reads a specified history.data file
+    from the MESA output and gives the desired columns
+    back.
+
+    Author:     Ylva Götberg
+    Date:       14/12 - 2014  
+    """
+    
     
     # Read the header of the history.data file
     try:

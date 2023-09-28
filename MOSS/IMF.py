@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 
-""" = = = = = IMF.py  = = = = = = = = = = = = = = = = = """
+"""
+    IMF.py
 
-""" This script holds IMFs as functions where inserted 
+    This script holds IMFs as functions where inserted 
     total mass of a population gives a set of randomly 
     drawn masses for the stars following the IMF.
     
     Author:     Ylva Götberg
-    Date:       22/6 - 2015                             """
-""" = = = = = = = = = = = = = = = = = = = = = = = = = = """
+    Date:       22/6 - 2015                              
+"""
 
 # Import some packages
 import numpy as np
@@ -18,6 +19,28 @@ import numpy as np
 # N(m) ~ m^-2.35
 #
 def Salpeter_IMF(U_rdm_array, mmin, mmax):
+    """
+    
+    Parameters:
+    -----------
+    U_rdm_array : array
+        Array of random numbers between 0 and 1
+    mmin : float
+        Minimum mass of the population
+    mmax : float
+        Maximum mass of the population
+    
+    Returns:
+    --------
+    masses : array
+        Array of masses drawn from the Salpeter IMF
+    
+    Notes:
+    ------
+    This function returns an array of masses drawn from
+    the Salpeter IMF. The Salpeter IMF (Initial Mass Function)
+    is a power law with a power of -2.35. 
+    """
     
     # alpha for the Salpeter IMF is 2.35
     alpha = 2.35
@@ -37,7 +60,28 @@ def Salpeter_IMF(U_rdm_array, mmin, mmax):
 #        m^-1.3      , 0.08 < m < 0.5 MSun
 #        m^-0.3      , m < 0.08
 #
-def Kroupa_IMF(U_rdm_array, mmin, mmax):   
+def Kroupa_IMF(U_rdm_array, mmin, mmax):
+    """
+    
+    Parameters:
+    -----------
+    U_rdm_array : array
+        Array of random numbers between 0 and 1
+    mmin : float
+        Minimum mass of the population
+    mmax : float
+        Maximum mass of the population
+
+    Returns:
+    --------
+    masses : array
+        Array of masses drawn from the Kroupa IMF
+
+    Notes:
+    ------
+    This function returns an array of masses drawn from
+    the Kroupa IMF.
+    """
     
     # Powers in the power laws
     a_alpha = -0.3 
@@ -92,7 +136,30 @@ def Kroupa_IMF(U_rdm_array, mmin, mmax):
 #        m^-1.3          , 0.08 < m < 0.5 MSun
 #        m^-0.3          , m < 0.08
 #
-def Alt_Kroupa_IMF(U_rdm_array, mmin, mmax, a_gamma):   
+def Alt_Kroupa_IMF(U_rdm_array, mmin, mmax, a_gamma):
+    """
+
+    Parameters:
+    -----------
+    U_rdm_array : array
+        Array of random numbers between 0 and 1
+    mmin : float
+        Minimum mass of the population
+    mmax : float
+        Maximum mass of the population
+    a_gamma : float
+        Power of the IMF at high masses 
+
+    Returns:
+    --------
+    masses : array
+        Array of masses drawn from the Kroupa IMF
+
+    Notes:
+    ------
+    This function returns an array of masses drawn from
+    the Kroupa IMF.
+    """   
     
     # Powers in the power laws
     a_alpha = -0.3 

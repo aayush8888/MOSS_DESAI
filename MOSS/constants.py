@@ -1,23 +1,31 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Jul  8 18:38:30 2015
+import numpy as np
 
-@author: Ylva
-"""
-
-""" = = = = = constants.py  = = = = = = = = = = = = = = """
-
-""" This function returns a dictionary with constants.
-    
-    Author:     Ylva Götberg
-    Date:       8/7 - 2015                              """
-""" = = = = = = = = = = = = = = = = = = = = = = = = = = """
 
 def constants():
 
-    # Import some packages
-    import numpy as np
+    """
+    = = = = = constants.py  = = = = = = = = = = = = = = 
 
+    Parameters:
+    -----------
+    None
+
+    Returns:
+    --------
+    const : dict
+        Dictionary with constants in SI and cgs units.
+    
+    Notes:
+    ------
+    The constants are taken from the NIST website:
+    http://physics.nist.gov/cuu/Constants/index.html
+
+    
+    Author:     Ylva Götberg
+    Date:       8/7 - 2015                              
+    """ 
+    
     # Boltzmann's constant
     kB_SI = 1.3806488e-23
     kB_cgs = 1.3806488e-16
