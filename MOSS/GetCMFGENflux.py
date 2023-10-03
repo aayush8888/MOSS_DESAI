@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import numpy as np
-from sympy import cos, atan, sqrt, N
 from constants import constants
 
 # Give as input a string with the location of the model
@@ -42,7 +41,7 @@ def GetCMFGENflux(model_loc,file_flux):
     Author:     Ylva Götberg
     Date:       28/9 - 2015    
     """
-    
+
     cstes = constants()
     c_SI = cstes['c_SI']
     pc_SI = cstes['pc_SI']

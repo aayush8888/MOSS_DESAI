@@ -13,6 +13,7 @@ dependencies:
   - ipython
   - lightkurve
   - pip
+  - sympy
   - pip:
     - sphinx
     - sphinx-rtd-theme

@@ -20,8 +20,11 @@ At this point, a new conda environment called `MOSS` was created which contains 
 ```shell
 conda activate MOSS
 ```
-Once you are in the `MOSS` environment, to test if the installation was successful run.
-
+Once you are in the `MOSS` environment:
+```shell
+pip install -e .
+```
+This will ensure that `MOSS` is located along with the other python packages and can be imported anyhow.
 
 ## Description
 MOSS is developed for population synthesis of stars using evoluationary models from ([MESA](https://docs.mesastar.org/en/release-r22.11.1/#)). The code is currently in it development stage but so far it is capable of producing populations of single and binary stars. In order to compute a population synthesis it requires a grid of MESA models that it uses to compute the astrophysical quantities of each star in the population. Given that MESA models can be computationally expensive and only cover a limited range of initial masses or initial magnetic fields, MOSS provides the capability of doing population studies by interpolating between MESA models for stars that have different initial conditions. For example, the code interpolates the evolution of stars with initial masses between :math:`10 M_\odot \geq M \geq 7 M_\odot` by passing two MESA models at each of these masses. It creates the initial population of stars through two possible  methods: startburts or constant star formation. For the case of starburts we start with an initial mass for the total population and using an Initial Mass Function (IMF) it assigns values to each star. The code then tracks the evolution of every star in the population and outputs their astrophysical quantities at any given evolution times. It can also automatically remove stars that have gone into their post-main squence evolution if we are only interested in main sequence populations. 

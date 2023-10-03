@@ -1,0 +1,41 @@
+#
+#     Data from population synthesis for run4
+#
+# By Ylva Gotberg, 2023-10-03
+#
+# Initial conditions:
+#   Using the single star models from /home/adesai/snap/firefox/common/Downloads/evolutionary_tracks/grid_006_single_star/ to determine the radii of donors at different evolutionary stages
+#   This means that we assume metallicity, Z=0.006
+#   Using the lifetimes of stars from single star models in/home/adesai/snap/firefox/common/Downloads/evolutionary_tracks/grid_006_single_star/
+#   IMF: Kroupa, M_min = 0.1 Msun, M_max = 100.0 Msun 
+# We assume the star-formation type: starburst, with a total mass of stars of 1000000.0 Msun
+# This file contains the information about the stars that are present in the population after 1000000.0 years
+#   fbin:moe
+#   q distribution: flat, 0.1 < q < 1.0
+#   P distribution: Sana+12 for M1>15 Msun and Opik24 for M1<15 Msun
+#
+# Physical assumptions:
+#   Critical mass ratio for the donor main sequence, q_crit_MS=0.65
+#   Critical mass ratio for the donor Hertzsprung gap, q_crit_HG=0.4
+#   Using the alpha-prescription for common envelope evolution
+#   alpha_CE = 1.0, lambda_CE = 0.5
+#   Using the binary star models from /home/adesai/snap/firefox/common/Downloads/evolutionary_tracks/grid_006/ to determine the masses and radii of stripped stars
+#   Stripped stars can only be formed from donor stars with 2.0 < M1init/Msun < 100.0
+#   Actually, we assume that binary interaction only can occur in the above mass range.
+#   For stripped stars we set the total lifetime to tau_MS+tau_strip, where the duration of the stripped phases (tau_strip) come from the binary models in/home/adesai/snap/firefox/common/Downloads/evolutionary_tracks/grid_006/
+#   Mass transfer efficiency is set to beta_MS = 1.0, beta_HG = 0.0, beta_HG_CEE = 0.0
+#   For mergers, we assume that their final mass is M1init+M2init
+#   The final period is set by the treatment of angular momentum during interaction, we ignore the effect of wind mass loss on the period.
+#   We use the isotropic_reemission setting for the treatment of angular momentum.
+#   For common envelope, the period is set in the alpha prescription
+#   Rejuvenation of mass gainers and MSMS mergers is set by Tout97
+#   HGMS mergers are not rejuvenated, but their lifetimes are adapted to the new mass
+#
+# Even though the full population synthesis accounts for the full mass range from 0.1 to 100.0 Msun, 
+# I will only keep the stars with initial masses (Minit or M1init) between 2.0 and 100.0 Msun.
+# I am ignoring single stars that died and binaries in which at least the primary died.
+# I show dead secondaries as long as the primary is still alive
+# For the star state: 1 - main-sequence star, 2 - stripped star, 3 - post main-sequence star, 4 - compact object, 51 - merger product in MS stage.
+# In this output, we only output the stripped star systems.
+#
+# Star_ID 	 Star_state_m1 	 Star_state_m2 	 Evolution 	 M1init 	 M2init 	 Pinit 	 Pcurrent 	 log_Teff_1 	 log_Teff_2 	 log_L_1 	 log_L_2 	 center_he4_1 	 center_he4_2 	 center_h1_1 	 center_h1_2 	 log_Lnuc_1 	 log_Lnuc_2 	 he_core_mass_1 	 he_core_mass_2 	 log_R_1 	 log_R_2 	 star_age_1 	 star_age_2 	 log_g_1 	 log_g_2 	 star_mass_1 	 star_mass_2 	 surface_n14_1 	 surface_n14_2 	 surface_c12_1 	 surface_c12_2 	 surface_o16_1 	 surface_o16_2 	 surf_avg_v_rot_1 	 surf_avg_v_rot_2 	 surface_h1_1 	 surface_h1_2 	 surface_he4_1 	 surface_he4_2 	 log_abs_mdot_1 	 log_abs_mdot_2

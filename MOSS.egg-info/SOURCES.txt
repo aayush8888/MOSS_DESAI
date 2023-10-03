@@ -1,0 +1,9 @@
+README.md
+setup.cfg
+setup.py
+MOSS.egg-info/PKG-INFO
+MOSS.egg-info/SOURCES.txt
+MOSS.egg-info/dependency_links.txt
+MOSS.egg-info/not-zip-safe
+MOSS.egg-info/requires.txt
+MOSS.egg-info/top_level.txt

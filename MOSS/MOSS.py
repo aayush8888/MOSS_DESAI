@@ -45,6 +45,11 @@ fsize = 20
 rc('font',**{'family':'serif','serif':['Times'],'size'   : fsize})
 rc('font',**{'size'   : fsize})
 rc('text', usetex=True)
+from tqdm import tqdm
+import MOSS_binary_fbin as Binary
+import MOSS_binary_qchoice as Binary_q
+import MOSS_binary_period as Binary_period
+from utils import UTILS
 
 # Import some of my own functions
 from GetColumnMESAhist import GetColumnMESAhist
@@ -73,6 +78,8 @@ filename_input = 'input.txt'
 fid_input = open(filename_input,'r')
 data_in = fid_input.readlines()
 fid_input.close()
+#INITIALISE ALL VARIABLES IN THE INPUT LIST
+eta_q = kappa_P = run_name = duration = Z = loc_pureHe_grid = type_SF = total_mass_starburst = starformation_rate = evaluation_time = IMF_choice = mmin = mmax = alpha_IMF = IBF_choice = Bmin = Bmax = Bmean = Bstdev = Bfrac = Bk = Bmu = fbin_choice = filename_moe = fbin_constant = q_choice = qmin = qmax = P_choice = Mlim_Sana = frac_magnetic = q_crit_MS = q_crit_HG = P_min_crit = alpha_prescription = alpha_CE = lambda_CE = Minit_strip_min = Minit_strip_max = beta_MS = beta_HG_CEE = beta_HG = angmom = gamma_MS = gamma_HG = rejuv_choice = record_stars = minimum_mass_to_print = maximum_mass_to_print = save_figs = col = history_filename = None
 
 # Loop through the lines in the input to get the input 
 for i in range(len(data_in)):
@@ -94,7 +101,7 @@ for i in range(len(data_in)):
         elif 'evaluation_time' in data_in[i]: 
             evaluation_time = data_in[i].split()[2]
             if ',' in evaluation_time: evaluation_time = np.float_(evaluation_time.split(','))
-            else: evaluation_time = np.array([np.float(evaluation_time)])
+            else: evaluation_time = np.array([float(evaluation_time)])
         elif 'IMF_choice' in data_in[i]: IMF_choice = data_in[i].split()[2]
         elif 'mmin' in data_in[i]: mmin = np.float_(data_in[i].split()[2])
         elif 'mmax' in data_in[i]: mmax = np.float_(data_in[i].split()[2])
@@ -141,8 +148,6 @@ for i in range(len(data_in)):
         elif 'col' in data_in[i]: col = data_in[i].split()[2].split(',')
         elif 'history_filename' in data_in[i]: history_filename = data_in[i].split()[2]
             
-
-
 # Check if binaries should be included
 compute_binaries = True
 if fbin_choice == 'constant':
@@ -156,15 +161,16 @@ if compute_binaries:
     col_bin.append('rl_relative_overflow_1')
     nbr_MESA_param_b = len(col_bin)
 
-
 # This is how the single star model history files are identified
-sims = [name for name in os.listdir(loc_sin_grid) if (os.path.isfile(loc_sin_grid+name+'/LOGS/'+history_filename))]
+history_filename_singlestar = 'history_mson.data'
+sims = [name for name in os.listdir(loc_sin_grid) if (os.path.isfile(loc_sin_grid+name+'/LOGS/'+history_filename_singlestar))]
 nbr_sims = len(sims)
 # My naming has also worked for mass sorting, but this will need to be updated too
 m_grid = [None]*nbr_sims
 for i in range(nbr_sims):
     #m_grid[i] = np.float_(sims[i].split('M')[1])
-    m_grid[i] = np.float_(sims[i])
+    m_grid[i] = np.float_(sims[i][1:])
+
 # Sort them with mass
 ind_sort = np.argsort(np.array(m_grid))
 m_grid = np.array(m_grid)[ind_sort]
@@ -172,14 +178,19 @@ sims = np.array(sims)[ind_sort]
     
 # Necessary properties: log_L & log_Lnuc for ZAMS determination, center_h1 for TAMS finding, center_he4 for HG location, log_R for maximum radius during evolutionary stages, log_L and log_Teff for Hayashi track, star_age for lifetime
 # --- --- --- ---
-    
 
 # This is just to make sure the code is running and the file-saving is working
+plots_dir = 'verification_plots_modular'
 if save_figs:
     # Location of test-plots
-    plots_dir = 'verification_plots'
-    os.system('mkdir '+plots_dir)
-    
+    directory_path = os.getcwd()+'/'+ plots_dir
+    if not os.path.exists(directory_path):
+    # If it doesn't exist, create it
+        os.makedirs(directory_path)
+        print(f"Directory '{directory_path}' created.")
+    else:
+        print(f"Directory '{directory_path}' already exists.")
+
     """
     fig, ax = plt.subplots(1,1,figsize=(8,6))
     ax.plot(np.arange(10),np.arange(10),'.')
@@ -187,49 +198,48 @@ if save_figs:
     plt.close(fig)
     """
 
-
 # Initiate a log-file that tracks the progress of the code
 # Name of the log-file
 log_name = 'log_'+run_name+'.log'
+utils_object = UTILS(log_name)
 
 # Also, tell the log the time and that the input file was read
-fid_log = open(log_name,'a')
-fid_log.write('\n       This is the log for '+run_name+'\n\n')
-fid_log.write('Now the date and time is '+str(datetime.datetime.now())+'\n')
-fid_log.write('The input file was read.\n\n')
+utils_object.write_log(message = '\n       This is the log for '+run_name+'\n\n')
+utils_object.write_log('Now the date and time is '+str(datetime.datetime.now())+'\n')
+utils_object.write_log('The input file was read.\n\n')
 
-fid_log.write(' ----- SUMMARY OF INPUT ----- \n\n')
+utils_object.write_log(' ----- SUMMARY OF INPUT ----- \n\n')
 
 if compute_binaries:
-    fid_log.write('Binary stars are included\n')
+    utils_object.write_log('Binary stars are included\n')
 else:
-    fid_log.write('Only single stars are computed - no binaries!!!\n')
+    utils_object.write_log('Only single stars are computed - no binaries!!!\n')
 
 # Assigning automatic grid locations according to the metallicity if 
 # the specific grid is not assigned in the input file. 
 
 # Single star grid
 if 'loc_sin_grid' in locals():
-    fid_log.write('The location of the single star evolutionary model grid is '+loc_sin_grid+'\n')
+    utils_object.write_log('The location of the single star evolutionary model grid is '+loc_sin_grid+'\n')
 else:
-    fid_log.write('Assuming automatic grid location for single stars\n')
+    utils_object.write_log('Assuming automatic grid location for single stars\n')
     loc_sin_grid = loc_sin_grids+'grid_'+str(Z).split('.')[1]+'/'
-    fid_log.write('The location of the single star evolutionary model grid is '+loc_sin_grid+'\n')
+    utils_object.write_log('The location of the single star evolutionary model grid is '+loc_sin_grid+'\n')
 
 # Binary star grid
 if 'loc_bin_grid' in locals():
-    fid_log.write('The location of the binary star evolutionary model grid is '+loc_bin_grid+'\n')
+    utils_object.write_log('The location of the binary star evolutionary model grid is '+loc_bin_grid+'\n')
 elif 'loc_bin_grids' in locals():
-    fid_log.write('Assuming automatic grid location for binary stars\n')
+    utils_object.write_log('Assuming automatic grid location for binary stars\n')
     loc_bin_grid = loc_bin_grids+'grid_'+str(Z).split('.')[1]+'/'
-    fid_log.write('The location of the binary star evolutionary model grid is '+loc_bin_grid+'\n')
-fid_log.write('\n')
+    utils_object.write_log('The location of the binary star evolutionary model grid is '+loc_bin_grid+'\n')
+utils_object.write_log('\n')
     
 # Magnetic star grid
 compute_magnetic = False
 if 'loc_B_grids' in locals():
     compute_magnetic = True
-    fid_log.write('The location of the magnetic star grid is '+loc_B_grids+'\n')
+    utils_object.write_log('The location of the magnetic star grid is '+loc_B_grids+'\n')
     # Check what grids there are
     B_grids = [name for name in os.listdir(loc_B_grids) if os.path.isdir(loc_B_grids+name+'/5.0')]
     # Sort them according to B-field strength
@@ -244,7 +254,7 @@ if 'loc_B_grids' in locals():
     B_m_grid = [None]*nbr_B_grids
     for j in range(nbr_B_grids):
         # Tell the log what B-field grids there are 
-        fid_log.write('There is a grid with initial magnetic field strengths of '+str(B_strength_grids[j])+' G\n')
+        utils_object.write_log('There is a grid with initial magnetic field strengths of '+str(B_strength_grids[j])+' G\n')
         B_sims[j] = [name for name in os.listdir(loc_B_grids+B_grids[j]) if os.path.isfile(loc_B_grids+B_grids[j]+'/'+name+'/LOGS/'+history_filename)]
         B_m_grid[j] = np.float_(np.array(B_sims[j]))
         # Sort them according to mass
@@ -253,78 +263,72 @@ if 'loc_B_grids' in locals():
         B_sims[j] = np.array(B_sims[j])[ind_sort]
         nbr_B_sims[j] = len(B_sims[j])
 
-    
 if 'exclude_pMS' in locals():
-    fid_log.write('Excluding post-MS evolution, the star dies at TAMS...\n\n')
+    utils_object.write_log('Excluding post-MS evolution, the star dies at TAMS...\n\n')
     
 # Repeat the input parameters in the log-file, just for the record. 
 # Metallicity
-fid_log.write('The metallicity is Z = '+str(Z)+'\n\n')
+utils_object.write_log('The metallicity is Z = '+str(Z)+'\n\n')
 # Starburst or continuous star-formation
-fid_log.write('This is using '+type_SF+' starformation type\n')
+utils_object.write_log('This is using '+type_SF+' starformation type\n')
 if type_SF == 'constant':
-    fid_log.write('The star-formation rate is '+str(starformation_rate)+' Msun/yr \n')
+    utils_object.write_log('The star-formation rate is '+str(starformation_rate)+' Msun/yr \n')
 elif type_SF == 'starburst':
-    fid_log.write('Going to model a starburst with '+str(total_mass_starburst)+' MSun\n')
-fid_log.write('\n')
+    utils_object.write_log('Going to model a starburst with '+str(total_mass_starburst)+' MSun\n')
+utils_object.write_log('\n')
 # Initial mass function
-fid_log.write('Using an IMF from '+IMF_choice+'\n')
-fid_log.write('Setting the mass limits to '+str(mmin)+'-'+str(mmax)+'MSun\n\n')
+utils_object.write_log('Using an IMF from '+IMF_choice+'\n')
+utils_object.write_log('Setting the mass limits to '+str(mmin)+'-'+str(mmax)+'MSun\n\n')
 # Binary fraction
-fid_log.write('Using the binary fraction setting: '+fbin_choice+'\n')
+utils_object.write_log('Using the binary fraction setting: '+fbin_choice+'\n')
 if fbin_choice == 'constant':
-    fid_log.write('The fraction of stars born in binaries is set to: '+str(fbin_constant)+'\n')
-fid_log.write('\n')
+    utils_object.write_log('The fraction of stars born in binaries is set to: '+str(fbin_constant)+'\n')
+utils_object.write_log('\n')
         
 # This is for the binary part of MOSS
 if compute_binaries:
     # Mass ratio distribution
-    fid_log.write('The mass ratio distribution is: '+q_choice+'\n')
-    fid_log.write('We allow for mass ratios between '+str(qmin)+' < M2/M1 < '+str(qmax)+'\n\n')
+    utils_object.write_log('The mass ratio distribution is: '+q_choice+'\n')
+    utils_object.write_log('We allow for mass ratios between '+str(qmin)+' < M2/M1 < '+str(qmax)+'\n\n')
     # Period distribution
-    fid_log.write('The period distribution is: '+P_choice+'\n')
+    utils_object.write_log('The period distribution is: '+P_choice+'\n')
     if P_choice == 'Opik_Sana':
-        fid_log.write('The switch from Opik to Sana occurs at '+str(Mlim_Sana)+' MSun\n')
-        fid_log.write('The minimum period for the Sana+12 part is '+str(10**0.15)+'days, while the Opik part goes to ZAMS radius.\n')
+        utils_object.write_log('The switch from Opik to Sana occurs at '+str(Mlim_Sana)+' MSun\n')
+        utils_object.write_log('The minimum period for the Sana+12 part is '+str(10**0.15)+'days, while the Opik part goes to ZAMS radius.\n')
     else:
-        fid_log.write('The minimum period is set to '+str(P_min_crit)+' days\n')
+        utils_object.write_log('The minimum period is set to '+str(P_min_crit)+' days\n')
     if fbin_choice == 'moe':
         P_max = 10**3.7
     else:
         P_max = 10**3.5
-    fid_log.write('The maximum period is set to '+str(P_max)+'days\n\n')
+    utils_object.write_log('The maximum period is set to '+str(P_max)+'days\n\n')
     # Critical mass ratios
-    fid_log.write('Common envelope on main sequence develops if the mass ratio is <'+str(q_crit_MS)+'\n')
-    fid_log.write('Common envelope on Hertzsprung gap develops if the mass ratio is <'+str(q_crit_HG)+'\n\n')
+    utils_object.write_log('Common envelope on main sequence develops if the mass ratio is <'+str(q_crit_MS)+'\n')
+    utils_object.write_log('Common envelope on Hertzsprung gap develops if the mass ratio is <'+str(q_crit_HG)+'\n\n')
     # Common envelope evolution
     if alpha_prescription:
-        fid_log.write('The alpha-prescription is used for modeling common envelopes (initiated on HG, otherwise assumed merge)\n')
-        fid_log.write('The efficiency factor, alpha, for common envelope is set to: '+str(alpha_CE)+'\n')
-        fid_log.write('The structure parameter, lambda, for common envelope is set to: '+str(lambda_CE)+'\n')
+        utils_object.write_log('The alpha-prescription is used for modeling common envelopes (initiated on HG, otherwise assumed merge)\n')
+        utils_object.write_log('The efficiency factor, alpha, for common envelope is set to: '+str(alpha_CE)+'\n')
+        utils_object.write_log('The structure parameter, lambda, for common envelope is set to: '+str(lambda_CE)+'\n')
     else:
-        fid_log.write('No alpha-prescription: simply assume that common envelopes initiated on the Hertzsprung gap leads to the creation of a stripped star if the mass ratio was larger than the critical value and the Roche-lobe was filled when the envelope of the donor was convective.\n')
-    fid_log.write('\n')
+        utils_object.write_log('No alpha-prescription: simply assume that common envelopes initiated on the Hertzsprung gap leads to the creation of a stripped star if the mass ratio was larger than the critical value and the Roche-lobe was filled when the envelope of the donor was convective.\n')
+    utils_object.write_log('\n')
     # Limits for the stripped star formation 
-    fid_log.write('We assume that stripped stars can be formed from stars with Minit ='+str(Minit_strip_min)+'-'+str(Minit_strip_max)+'MSun\n')
-    fid_log.write('This mass range is actually the only mass range we consider binary interaction active\n\n')
+    utils_object.write_log('We assume that stripped stars can be formed from stars with Minit ='+str(Minit_strip_min)+'-'+str(Minit_strip_max)+'MSun\n')
+    utils_object.write_log('This mass range is actually the only mass range we consider binary interaction active\n\n')
     # Mass accretion efficiency
-    fid_log.write('The mass accretion efficiency on the MS (Case A) is set to: '+str(beta_MS)+'\n')
-    fid_log.write('The mass accretion efficiency on the HG (Case B) is set to: '+str(beta_HG)+'\n')
-    fid_log.write('The mass accretion during common envelope initiated on the HG (Case B_CEE) is set to: '+str(beta_HG_CEE)+'\n\n')
+    utils_object.write_log('The mass accretion efficiency on the MS (Case A) is set to: '+str(beta_MS)+'\n')
+    utils_object.write_log('The mass accretion efficiency on the HG (Case B) is set to: '+str(beta_HG)+'\n')
+    utils_object.write_log('The mass accretion during common envelope initiated on the HG (Case B_CEE) is set to: '+str(beta_HG_CEE)+'\n\n')
     # Treatment of angular momentum        
-    fid_log.write('Angular momentum during mass transfer is treated as: '+angmom+'\n')
+    utils_object.write_log('Angular momentum during mass transfer is treated as: '+angmom+'\n')
     if angmom == 'gamma_constant':
-        fid_log.write('The parameter gamma is set to constant\n')
-        fid_log.write('On the main sequence, gamma = '+str(gamma_MS)+'\n')
-        fid_log.write('On the Hertzsprung gap, gamma = '+str(gamma_HG)+'\n')
-    fid_log.write('\n')
-    fid_log.write('Rejuvenation is set as: '+rejuv_choice+'\n')
-fid_log.write('\n  ------------------- \n')
-    
-# Close the log-file
-fid_log.close()
-
-    
+        utils_object.write_log('The parameter gamma is set to constant\n')
+        utils_object.write_log('On the main sequence, gamma = '+str(gamma_MS)+'\n')
+        utils_object.write_log('On the Hertzsprung gap, gamma = '+str(gamma_HG)+'\n')
+    utils_object.write_log('\n')
+    utils_object.write_log('Rejuvenation is set as: '+rejuv_choice+'\n')
+utils_object.write_log('\n  ------------------- \n')
     
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 #                                                                             #
@@ -343,9 +347,7 @@ fid_log.close()
 
 if compute_magnetic == False:
     # Tell the log what is going to happen
-    fid_log = open(log_name,'a')
-    fid_log.write('Going to read the evolutionary models for single stars...\n')
-    fid_log.close()
+    utils_object.write_log('Going to read the evolutionary models for single stars...\n')
 
     # Storage space
     MESA_params = [None]*nbr_sims   # This will be a matrix per model and contain the parameters inside col
@@ -357,7 +359,6 @@ if compute_magnetic == False:
     ind_maxR_HG = [None]*nbr_sims  # the index for the maximum radius during the Hertzsprung gap
     ind_conv_env = [None]*nbr_sims  # approximation for the time the star reaches the Hayashi track 
                                     # and develops a deep convective envelope
-
 
     # These are the parameters I really need
     R_ZAMS_grid = np.zeros(nbr_sims)
@@ -379,7 +380,7 @@ if compute_magnetic == False:
         # --- UPDATE HERE ---
         # -> need better storaging and maybe also reading of mesa files
         # Read the history file
-        filename_history = loc_sin_grid+sims[i]+'/LOGS/'+history_filename
+        filename_history = loc_sin_grid+sims[i]+'/LOGS/'+history_filename_singlestar
         data = GetColumnMESAhist(filename_history,col)
 
         # Get some of the properties
@@ -416,11 +417,11 @@ if compute_magnetic == False:
 
         # Find the maximum radius during the main sequence
         ind_MS = indices[ind_ZAMS[i]:ind_TAMS[i]]
-        ind_maxR_MS[i] = indices[np.max(log_R[ind_MS]) == log_R]
+        ind_maxR_MS[i] = indices[np.max(log_R[ind_MS]) == log_R].item()
 
         # Find the maximum radius during the Hertzsprung gap evolution
         ind_HG = (center_h1 < 1e-2)*(center_he4 > 0.98)
-        ind_maxR_HG[i] = indices[ind_HG][log_R[ind_HG] == np.max(log_R[ind_HG])]
+        ind_maxR_HG[i] = indices[ind_HG][log_R[ind_HG] == np.max(log_R[ind_HG])].item()
 
         # Approximation for the development of the convective envelope (Hayashi track)    
         ind2 = (log_Teff<4.)*(indices > ind_TAMS[i])
@@ -464,15 +465,13 @@ if compute_magnetic == False:
         he_core_mass_TAMS[i]=he_core_mass[ind_hetmp]
  
         # Tell the log that you have read the model
-        fid_log = open(log_name,'a')
-        fid_log.write('At '+sims[i]+'\n')
-        fid_log.close()
+        utils_object.write_log('At '+sims[i]+'\n')
+        
 
 
     # Tell the log that the evolutionary models for single stars have been read
-    fid_log = open(log_name,'a')
-    fid_log.write('The evolutionary models for single stars have been read. \n')
-    fid_log.close()
+    utils_object.write_log('The evolutionary models for single stars have been read. \n')
+    
 
     # Move out the index saying whether a star in the grid lives (past central He exhaustion)
     ind_life = lifetime_grid > 0.
@@ -497,11 +496,11 @@ if compute_magnetic == False:
                 ax.plot(log_Teff[ind_maxR_MS[i]],log_L[ind_maxR_MS[i]],'og')
                 ax.plot(log_Teff[ind_conv_env[i]],log_L[ind_conv_env[i]],'oy')
                 ax.plot(log_Teff[ind_maxR_HG[i]],log_L[ind_maxR_HG[i]],'om')
-        ax.set_xlabel('$\\log_{10} (T_{\\mathrm{eff}}/\\mathrm{K})$')
-        ax.set_ylabel('$\\log_{10} (L/L_{\\odot})$')
+        ax.set_xlabel(r'$\\log_{10} (T_{\\mathrm{eff}}/\\mathrm{K})$')
+        ax.set_ylabel(r'$\\log_{10} (L/L_{\\odot})$')
         ax.invert_xaxis()
         ax.legend(loc=0,fontsize=0.8*fsize)
-        ax.set_title('$Z = '+str(Z)+'$')
+        ax.set_title(r'$Z = '+str(Z)+'$')
         fig.savefig(plots_dir+'/HRD_single.png',format='png',bbox_inches='tight',pad_inches=0.1)
         plt.close(fig)
         # # # # # # # # # # # # # # # # # # 
@@ -543,9 +542,8 @@ if compute_magnetic == False:
         # # # # # # # # # # # # # # # # # #
 
         # Tell the log 
-        fid_log = open(log_name,'a')
-        fid_log.write('Saved an HRD, radius evolution, and lifetime diagrams in '+plots_dir+'... \n\n')
-        fid_log.close()
+        utils_object.write_log('Saved an HRD, radius evolution, and lifetime diagrams in '+plots_dir+'... \n\n')
+        
 
     
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
@@ -567,9 +565,8 @@ if compute_magnetic == False:
 if compute_magnetic: 
     
     # Tell the log
-    fid_log = open(log_name,'a')
-    fid_log.write('Going to read the evolutionary models for the magnetic stars...\n')
-    fid_log.close()
+    utils_object.write_log('Going to read the evolutionary models for the magnetic stars...\n')
+    
     
     # Make some storage space
     ind_ZAMS_B = [None]*nbr_B_grids
@@ -593,9 +590,7 @@ if compute_magnetic:
     for j in range(nbr_B_grids): 
         
         # Tell the log
-        fid_log = open(log_name,'a')
-        fid_log.write('   Inside B-grid '+B_grids[j]+'...\n')
-        fid_log.close()        
+        utils_object.write_log('   Inside B-grid '+B_grids[j]+'...\n')
         
         # Make some storage space
         ind_ZAMS_B[j] = [None]*nbr_B_sims[j]
@@ -613,7 +608,6 @@ if compute_magnetic:
         
         lifetime_grid_B[j] = [None]*nbr_B_sims[j]
         MS_duration_grid_B[j] = [None]*nbr_B_sims[j]
-        
         
         # Read the models for each B-grid
         for i in range(nbr_B_sims[j]): 
@@ -691,15 +685,11 @@ if compute_magnetic:
             MS_duration_grid_B[j][i] = star_age[ind_TAMS_B[j][i]]
 
             # Tell the log that you have read the model
-            fid_log = open(log_name,'a')
-            fid_log.write('At '+B_sims[j][i]+'\n')
-            fid_log.close()
-
+            utils_object.write_log('At '+B_sims[j][i]+'\n')
 
     # Tell the log that the evolutionary models for magnetic stars have been read
-    fid_log = open(log_name,'a')
-    fid_log.write('The evolutionary models for magnetic stars have been read. \n')
-    fid_log.close()
+    utils_object.write_log('The evolutionary models for magnetic stars have been read. \n')
+    
             
     
 
@@ -719,11 +709,8 @@ if compute_magnetic:
 # This is only done if binaries are included in the simulation
 if compute_binaries:
 
-    # Tell the log that the stripped star evolutionary models will be read
-    fid_log = open(log_name,'a')
-    fid_log.write('Going to read the evolutionary models for stars stripped in binaries... \n')
-    fid_log.close()
-
+    # Tell the log that the stripped star evolutionary models will be read 
+    utils_object.write_log('Going to read the evolutionary models for stars stripped in binaries... \n')
 
     # Which models are available?
     sims_bin = [name for name in os.listdir(loc_bin_grid) if (name[0]=='M' and os.path.isfile(loc_bin_grid+name+'/LOGS1/history.data'))]
@@ -735,7 +722,6 @@ if compute_binaries:
     m_bin_grid = np.array(m_bin_grid)[ind_sort]
     sims_bin = np.array(sims_bin)[ind_sort]
     nbr_sims_bin = len(sims_bin)
-
 
     # Storage space
     MESA_params_b = [None]*nbr_sims_bin   # This will be a matrix per model and contain the parameters inside col
@@ -812,17 +798,11 @@ if compute_binaries:
             strip_duration_grid[i] = star_age_b[ind_end[i]]-star_age_b[ind_detach[i]]
 
         # Tell the log that the model was read
-        fid_log = open(log_name,'a')
-        fid_log.write('At '+sims_bin[i]+'\n')
-        fid_log.close()
-
+        utils_object.write_log('At '+sims_bin[i]+'\n')
+        
     # Tell the log that the evolutionary models for stripped stars have been read
-    fid_log = open(log_name,'a')
-    fid_log.write('The evolutionary models for stripped stars have been read. \n')
-    fid_log.close()
-
-
-
+    utils_object.write_log('The evolutionary models for stripped stars have been read. \n')
+    
     if save_figs:
         # Test figures
         # # # # Plot the HRD # # # # # # # #
@@ -842,11 +822,11 @@ if compute_binaries:
                 ax.plot(log_Teff_b[ind_detach[i]],log_L_b[ind_detach[i]],'go')
                 ax.plot(log_Teff_b[ind_end[i]],log_L_b[ind_end[i]],'mo')
             ax.plot(log_Teff_b,log_L_b,'k-')
-        ax.set_xlabel('$\\log_{10} (T_{\\mathrm{eff}}/\\mathrm{K})$')
-        ax.set_ylabel('$\\log_{10} (L/L_{\\odot})$')
+        ax.set_xlabel(r'$\\log_{10} (T_{{eff}}/{K})$')
+        ax.set_ylabel(r'$\\log_{10} (L/L_{\\odot})$')
         ax.invert_xaxis()
-        ax.legend(loc=0,fontsize=0.8*fsize)
-        fig.savefig(plots_dir+'/HRD_stripped.png',format='png',bbox_inches='tight',pad_inches=0.1)
+        # ax.legend(fontsize=0.8*fsize)
+        fig.savefig(plots_dir+'/HRD_stripped.png',bbox_inches='tight',pad_inches=0.1)
         plt.close(fig)
         # # # # # # # # # # # # # # # # # # 
 
@@ -855,7 +835,7 @@ if compute_binaries:
         ax.loglog(m_bin_grid,mstrip_grid,'.')
         ax.set_xlabel('Initial mass [$M_{\\odot}$]')
         ax.set_ylabel('Stripped star mass [$M_{\\odot}$]')
-        fig.savefig(plots_dir+'/M_stripped.png',format='png',bbox_inches='tight',pad_inches=0.1)
+        fig.savefig(plots_dir+'/M_stripped.png',bbox_inches='tight',pad_inches=0.1)
         plt.close(fig)
         # # # # # # # # # # # # # # # # # # 
 
@@ -880,11 +860,9 @@ if compute_binaries:
 
 
         # Tell the log that the evolutionary models for stripped stars have been read
-        fid_log = open(log_name,'a')
-        fid_log.write('Saved some figures in '+plots_dir+' \n\n')
-        fid_log.close()
         
-    
+        utils_object.write_log('Saved some figures in '+plots_dir+' \n\n')
+        
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 #                                                                             #
@@ -900,11 +878,9 @@ if compute_binaries:
 #
 
 # Tell the log that we are entering the population synthesis phase
-fid_log = open(log_name,'a')
-fid_log.write('Entering the population synthesis! \n')
-fid_log.write('This is Monte Carlo\n\n')
-fid_log.write('IMF: picking masses of stars\n')
-fid_log.close()
+utils_object.write_log('Entering the population synthesis! \n')
+utils_object.write_log('This is Monte Carlo\n\n')
+utils_object.write_log('IMF: picking masses of stars\n')
 
 # In case the star-formation rate is too high, we need to start a loop because python cannot handle that much data
 num_turns = 1
@@ -913,18 +889,25 @@ if type_SF == 'constant':
         num_turns = int(np.ceil(starformation_rate/SFR_lim))
     SFR_run = copy.copy(SFR_lim)
 
-fid_log = open(log_name,'a')
-fid_log.write('Going to run '+str(num_turns)+' loops\n')
-fid_log.close()
+utils_object.write_log('Going to run '+str(num_turns)+' loops\n')
         
-
 # Start the loop (because SFR too high for memory)
-for iii in range(num_turns):
+print(num_turns)
+binaries_object = utils_object.func_pass
+q_object = utils_object.func_pass
+if compute_binaries:
 
-    fid_log = open(log_name,'a')
-    fid_log.write('Starting turn '+str(iii+1)+'..........\n')
-    fid_log.close()
-    
+    binaries_object = Binary.COMPUTE_BINARIES(m=0,nbr_stars=0,iii=0,log_name=log_name,save_figs=save_figs,plots_dir=plots_dir,mmin=0,mmax=0,fbin_constant=fbin_constant,fbin_choice=fbin_choice)
+
+    q_object = Binary_q.COMPUTE_BINARIES_qchoice(q_choice = q_choice, qmax = 0, qmin = 0, nbr_bin = 0, iii = 0,log_name = log_name, plots_dir = plots_dir, eta_q = eta_q, m = 0, primary = 0, Target_M = 0, save_figs = save_figs, single = 0, birthday = 0, fsize = fsize)
+
+    period_object = Binary_period.COMPUTE_BINARIES_period(period_choice = P_choice, nbr_bin = 0, primary = 0, q = 0.5, nbr_stars = 0, m1 = 1, m2 = 0, birthday = 0, birthday_m2 = 0, single = 0, m = 0, m_grid = m_grid, iii = 0, log_name = log_name, plots_dir = plots_dir, save_figs = save_figs, fsize = 0, Mlim_Sana = Mlim_Sana, RSun_AU = RSun_AU, G = G, R_ZAMS_grid = R_ZAMS_grid, P_max = P_max, kappa_P = kappa_P)
+    print("success")
+
+for iii in tqdm(range(num_turns)):
+
+
+    utils_object.write_log('Starting turn '+str(iii+1)+'..........\n')
     # # # # # #  Initial Mass Function (IMF) # # # # # # 
 
     # Give a total mass of the population
@@ -953,12 +936,8 @@ for iii in range(num_turns):
     m = m[:ind]
     nbr_stars = len(m)
     
-
     # Tell the log that the masses have been picked
-    fid_log = open(log_name,'a')
-    fid_log.write('IMF gives a total stellar mass of '+str(Mtot)+' MSun and '+str(nbr_stars)+' number of stars \n')
-    fid_log.close()
-
+    utils_object.write_log('IMF gives a total stellar mass of '+str(Mtot)+' MSun and '+str(nbr_stars)+' number of stars \n')
 
     if iii == 0:
         if save_figs:
@@ -980,12 +959,8 @@ for iii in range(num_turns):
             fig.savefig(plots_dir+'/IMF.png',format='png',bbox_inches='tight',pad_inches=0.1)
             plt.close(fig)
             # # # # # # # # # # # # # # # # # # 
-
             # Tell the log
-            fid_log = open(log_name,'a')
-            fid_log.write('Saved a plot of the IMF distribution in '+plots_dir+' \n')
-            fid_log.close()
-
+            utils_object.write_log('Saved a plot of the IMF distribution in '+plots_dir+' \n')
 
     # Give the stars a birthday
     if type_SF == 'starburst':
@@ -994,14 +969,10 @@ for iii in range(num_turns):
         birthday = np.random.random(nbr_stars)*duration
 
     # Tell the log
-    fid_log = open(log_name,'a')
-    fid_log.write('Assigned birthdays to the stars \n\n')
-    fid_log.close()
+    utils_object.write_log('Assigned birthdays to the stars \n\n')
 
     # # # # # #  Initial B-field Function (IBF) # # # # # #
-    # 
     if compute_magnetic:
-
         # Make an array to hold the initial magnetic field strengths
         Binit = np.zeros(nbr_stars)
 
@@ -1019,12 +990,9 @@ for iii in range(num_turns):
         elif IBF_choice == 'IBF_poisson':
             Binit[ind_B] = IBF_poisson(nbr_B, k, mu)   # I don't think the k and mu work yet in the input file - check it.. 
 
-        
         # This is the number of magnetic stars
         nbr_B = np.sum(Binit>0.)
             
-
-
         # Only for the first loop to not overload
         if iii == 0:
             if save_figs:
@@ -1045,606 +1013,26 @@ for iii in range(num_turns):
                 # # # # # # # # # # # # # # # # # #             
 
         # Tell the log
-        fid_log = open(log_name,'a')
-        fid_log.write('IBF: Assigned initial B-fields for the stars, using the '+IBF_choice+' function \n\n')
-        fid_log.close()        
-
-            
-    
+        utils_object.write_log('IBF: Assigned initial B-fields for the stars, using the '+IBF_choice+' function \n\n')
+          
+    ######################STARTING MODULARISING THE CODE FOR BINARIES#######################
+    nbr_bin = 0.
+    primary = np.zeros(nbr_stars) != 0.
     if compute_binaries:
 
-        # # # # # #  Binary fraction, f_bin # # # # # # 
-        # The binary fraction is drawn from distributions
-
-        # Tell the log
-        fid_log = open(log_name,'a')
-        fid_log.write('BINARY FRACTION: Going to pick which stars are in binaries \n')
-        fid_log.close()
-
-        # Duchene & Kraus (2013)
-        if fbin_choice == 'DK':
-
-            # Tell the log
-            fid_log = open(log_name,'a')
-            fid_log.write('Using the binary fraction from Duchene and Kraus (2013)\n')
-            fid_log.close()
-
-            # The binary fraction is mass dependent
-            primary = np.zeros(nbr_stars)
-
-            # Very low mass stars are not included in this analysis but Duchene & Kraus do mention
-            # something about the companion fraction so just in case I put here that Aller (2007) 
-            # estimated the multiplicity fraction for m <~ 0.1 MSun to be 22^{+6}_{-4} %. 
-
-            # Low-mass stars data come from nearly complete samples as described in Duchene & Kraus (2013)
-            # from Delfosse+ 04, Dieterich+ 12 and Reid & Gizis (97a)
-            ind_low_mass = (m < 0.5)*(m >= 0.1)
-            nbr_low_mass = np.sum(ind_low_mass)
-            if nbr_low_mass>0:
-                primary[ind_low_mass] = np.random.random(nbr_low_mass) <= 0.26
-
-            # WHAT ABOUT 0.5 < m < 0.7 MSun ????? 
-
-            # For the solar-mass stars I pick from Duchene & Kraus (2013) data from Raghavan+ 2010
-            # 0.7 < m < 1.0 MSun
-            ind_solar_mass1 = (m < 1.0)*(m >= 0.7)
-            nbr_solar_mass1 = np.sum(ind_solar_mass1)
-            if nbr_solar_mass1>0:
-                primary[ind_solar_mass1] = np.random.random(nbr_solar_mass1) <= 0.41
-
-            # 1.0 < m < 1.3 MSun
-            ind_solar_mass2 = (m < 1.3)*(m >= 1.0)
-            nbr_solar_mass2 = np.sum(ind_solar_mass2)
-            if nbr_solar_mass2>0:
-                primary[ind_solar_mass2] = np.random.random(nbr_solar_mass2) <= 0.5
-
-            # WHAT ABOUT 1.3 < m < 1.5 MSun ??????
-
-            # Intermediate mass stars 
-            # Duchene & Kraus are not very precise here, but say the multiplicity fraction is > 0.5
-            # 1.5 < m < 5.0 MSun
-            ind_intermediate_mass = (m < 5.0)*(m >= 1.5)
-            nbr_intermediate_mass = np.sum(ind_intermediate_mass)
-            if nbr_intermediate_mass>0:
-                primary[ind_intermediate_mass] = np.random.random(nbr_intermediate_mass) <= 0.5
-
-            # High mass stars
-            # For high-mass stars I will just bluntly use 0.7. It is very optimistic in Duchene & Kraus.
-            ind_high_mass = m >= 5.0
-            nbr_high_mass = np.sum(ind_high_mass)
-            if nbr_high_mass>0:
-                primary[ind_high_mass] = np.random.random(nbr_high_mass) <= 0.69
-
-            # Total number of binary stars
-            nbr_bin = np.sum(primary)
-
-            # Make primary a boolean array
-            primary = primary == 1
-
-
-            if iii == 0:
-                if save_figs:
-                    # # # # Plot the fbin # # # # # # # #
-                    mm = np.logspace(0,2.5,101)
-                    fbin_plot = np.zeros(len(mm)-1)
-                    mid_m = np.zeros(len(mm)-1)
-                    for i in range(len(mm)-1):
-                        bin_bin = (m[primary] >= mm[i])*(m[primary] < mm[i+1])
-                        sin_bin = (m >= mm[i])*(m < mm[i+1])
-                        if np.sum(sin_bin) >0:
-                            fbin_plot[i] = float(np.sum(bin_bin))/float(np.sum(sin_bin))
-                        mid_m[i] = mm[i]+(mm[i+1]-mm[i])/2.0
-
-                    fig, ax = plt.subplots(1,1,figsize=(6,4.5))
-                    ax.semilogx(mid_m,fbin_plot,'b-',lw=2)
-                    ax.set_xlabel('Mass [$M_{\\odot}$]')
-                    ax.set_ylabel('$f_{\\mathrm{bin}}$')
-                    xtick = [1,10,100]
-                    ax.set_xticks(xtick)
-                    ax.set_xticklabels([1,10,100])
-                    for i in range(len(xtick)):
-                        ax.get_xaxis().majorTicks[i].set_pad(7)
-                    ax.tick_params('both', length=8, width=1.5, which='major')
-                    ax.tick_params('both', length=4, width=1.0, which='minor')
-                    ytick = [0,0.2,0.4,0.6,0.8,1.0]
-                    ax.set_yticks(ytick)
-                    ax.set_xlim([mmin,mmax])
-                    fig.savefig(plots_dir+'/fbin.png',format='png',bbox_inches='tight',pad_inches=0.1)
-                    plt.close(fig)
-                    # # # # # # # # # # # # # # # # # # 
-
-
-
-        # The analytical relation of van Haaften et al. (2013)
-        elif fbin_choice == 'vH13':
-
-            # Tell the log
-            fid_log = open(log_name,'a')
-            fid_log.write('Using the binary fraction from van Haaften et al. (2013)\n')
-            fid_log.close()
-
-            # Create a random array 
-            temp_random = np.random.random(nbr_stars)
-
-            # Get the binary fraction for each mass
-            fbin = 0.5 + 0.25*np.log10(m)
-            fbin[fbin>1.0] = 1.0
-
-            # Determine which stars are in binary
-            primary = temp_random <= fbin
-
-            # How many binaries is that?
-            nbr_bin = np.sum(primary)
-
-            if iii == 0:
-                if save_figs:
-                    # # # # Plot the fbin # # # # # # # #
-                    clr_l = np.array([118, 68, 138])/255.
-                    clr_f = np.array([175, 122, 197])/255.
-                    mm = np.logspace(0,2.5,100)
-                    fbin_plot = 0.5+0.25*np.log10(mm)
-                    fbin_plot[fbin_plot>1.0] = 1.0
-                    fig, ax = plt.subplots(1,1,figsize=(6,4.5))
-                    ax.semilogx(mm,fbin_plot,'-',color=clr_l,lw=3)
-                    ax.fill_between(mm,np.zeros(len(fbin_plot)),fbin_plot,color=clr_f)
-                    ax.set_xlabel('Mass [$M_{\\odot}$]')
-                    ax.set_ylabel('$f_{\\mathrm{bin}}$')
-                    xtick = [1,10,100]
-                    ax.set_xticks(xtick)
-                    ax.set_xticklabels([1,10,100])
-                    for i in range(len(xtick)):
-                        ax.get_xaxis().majorTicks[i].set_pad(7)
-                    ax.tick_params('both', length=8, width=1.5, which='major')
-                    ax.tick_params('both', length=4, width=1.0, which='minor')
-                    ax.set_xlim([1,100])
-                    ax.set_ylim([0,1])
-                    fig.savefig(plots_dir+'/fbin.png',format='png',bbox_inches='tight',pad_inches=0.1)
-                    plt.close(fig)
-                    # # # # # # # # # # # # # # # # # # 
-
-
-        # This binary fraction is from Moe & DiStefano (2017), see their Fig. 42
-        elif fbin_choice == 'moe':
-
-            # Tell the log
-            fid_log = open(log_name,'a')
-            fid_log.write('Using a function fitted to Fig. 42 of Moe & DiStefano (2017) for the binary fraction \n')
-            fid_log.close()
-
-            # Get the binary fraction for each mass
-            # steps: 
-            # (1) read the Fig 42 of Moe & DiStefano (2017), 
-            #filename_moe = '/data001/ygoetberg/taurus/python_scripts/ionisation_paper/moe_distefano_17.txt'
-            #data = np.loadtxt(filename_moe)
-            #M_tmp = data[:,0]
-            #fbin_tmp = data[:,1]
-            # This file contains the binary fractions for interacting binaries that Moe & DiStefano (2017) found (their Fig. 42), for 0.2 < log10 P < 3.7 and q > 0.1
-            # I have used plot digitizer to get these values.
-            M_tmp = np.array([28.208070697850278,12.194394238503687,7.013958043119244,3.5179000994706486,1.0033899071551038])
-            fbin_tmp = np.array([1.039580885942532,0.7743880876109841,0.621660551424101,0.3699230117699013,0.1392481270452426])
-            # (2) fit line, 
-            coeff = np.polyfit(np.log10(M_tmp),fbin_tmp,1)
-            # (3) use line as function
-            fbin = np.polyval(coeff,np.log10(m))
-            fbin[fbin>1.] = 1.
-
-            # Create a random array
-            temp_random = np.random.random(nbr_stars)
-
-            # Determine which stars are in binary
-            primary = temp_random <= fbin
-
-            # How many binaries is that? 
-            nbr_bin = np.sum(primary)
-
-            if iii == 0:
-                if save_figs:
-                    # # # # Plot the fbin # # # # # # # #
-                    clr_l = np.array([118, 68, 138])/255.
-                    clr_f = np.array([175, 122, 197])/255.
-                    mm = np.logspace(0,2.5,100)
-                    fbin_plot = coeff[0]*np.log10(mm) + coeff[1]
-                    fbin_plot[fbin_plot>1.0] = 1.0
-                    fig, ax = plt.subplots(1,1,figsize=(6,4.5))
-                    ax.semilogx(mm,fbin_plot,'-',color=clr_l,lw=3)
-                    ax.fill_between(mm,np.zeros(len(fbin_plot)),fbin_plot,color=clr_f)
-                    ax.set_xlabel('Mass [$M_{\\odot}$]')
-                    ax.set_ylabel('$f_{\\mathrm{bin}}$')
-                    xtick = [1,10,100]
-                    ax.set_xticks(xtick)
-                    ax.set_xticklabels([1,10,100])
-                    for i in range(len(xtick)):
-                        ax.get_xaxis().majorTicks[i].set_pad(7)
-                    ax.tick_params('both', length=8, width=1.5, which='major')
-                    ax.tick_params('both', length=4, width=1.0, which='minor')
-                    ax.set_xlim([1,100])
-                    ax.set_ylim([0,1.05])
-                    ax.tick_params(direction="in", which='both')
-                    fig.savefig(plots_dir+'/fbin.png',format='png',bbox_inches='tight',pad_inches=0.1)
-                    plt.close(fig)
-                    # # # # # # # # # # # # # # # # # # 
-
-
-        # Allow for a mass-independent binary fraction too
-        elif fbin_choice == 'constant':
-
-            # Tell the log
-            fid_log = open(log_name,'a')
-            fid_log.write('Assuming a mass-independent binary fraction of fbin = '+str(fbin_constant)+'\n')
-            fid_log.close()    
-
-            # Create a random array
-            temp_random = np.random.random(nbr_stars)
-
-            # Determine which stars are in binary
-            primary = temp_random <= fbin_constant
-
-            # How many binaries is that? 
-            nbr_bin = np.sum(primary)
-
-            if iii == 0:
-                if save_figs:
-                    # # # # Plot the fbin # # # # # # # #
-                    clr_l = np.array([118, 68, 138])/255.
-                    clr_f = np.array([175, 122, 197])/255.
-                    fig, ax = plt.subplots(1,1,figsize=(6,4.5))
-                    medges = np.logspace(np.log10(mmin), np.log10(mmax),21)
-                    mmid = 10**(np.log10(medges[:-1])+ (np.log10(medges[1:])-np.log10(medges[:-1]))/2.)
-                    fbin_plot = np.zeros(len(medges)-1)
-                    for k in range(len(medges)-1):
-                        ind_mbin = (m>=medges[k])*(m<medges[k+1])
-                        fbin_plot[k] = np.sum(primary*ind_mbin)/np.float_(np.sum(ind_mbin))
-                    ax.semilogx(mmid,fbin_plot,'-',color=clr_l)
-                    ax.semilogx(mmid,fbin_plot,'.',color=clr_f)
-                    ax.set_xlabel('Mass [$M_{\\odot}$]')
-                    ax.set_ylabel('$f_{\\mathrm{bin}}$')
-                    xtick = [1,10,100]
-                    ax.set_xticks(xtick)
-                    ax.set_xticklabels([1,10,100])
-                    for i in range(len(xtick)):
-                        ax.get_xaxis().majorTicks[i].set_pad(7)
-                    ax.tick_params('both', length=8, width=1.5, which='major')
-                    ax.tick_params('both', length=4, width=1.0, which='minor')
-                    ax.set_xlim([1,100])
-                    ax.set_ylim([0,1.05])
-                    ax.tick_params(direction="in", which='both')
-                    fig.savefig(plots_dir+'/fbin.png',format='png',bbox_inches='tight',pad_inches=0.1)
-                    plt.close(fig)
-                    # # # # # # # # # # # # # # # # # # 
-
-    # Not necessary to do the above if there are only single stars
-    else: 
-        nbr_bin = 0.
-        primary = np.zeros(nbr_stars) != 0.
-
-    single = primary==False
-
-    # Tell the log
-    fid_log = open(log_name,'a')
-    fid_log.write('Number of binaries: '+ str(nbr_bin)+ ' (not corrected for total mass yet) \n')
-    if save_figs:
-        fid_log.write('Saved a figure describing the binary fraction in '+plots_dir+' and if binaries are included\n')
-    fid_log.close()
-
-
-
-
-    if compute_binaries:
-        
-        
-        # # # # # #  Mass ratio, q # # # # # # 
-        #
-        # The mass ratio is drawn from distributions
-
-        # Tell the log
-        fid_log = open(log_name,'a')
-        fid_log.write('\nMASS RATIO: Choosing masses of companions by randomly drawing from a mass ratio distribution \n')
-        fid_log.close()
-
-        # The flat mass ratio distribution
-        if q_choice == 'flat':
-
-            # Mass ratio is a tricky business and so far flat between 0.1 and 1 is pretty standard.
-            q = (qmax-qmin)*np.random.random(nbr_bin) + qmin
-
-            # Tell the log
-            fid_log = open(log_name,'a')
-            fid_log.write('Assigned masses to the secondaries following a flat distribution in mass ratio. \n')
-            fid_log.close()
-
-
-        # This is the power-law slope:    dN/dq = k*q^eta_q
-        elif q_choice == 'power_slope':
-
-            # Random array between 0 and 1
-            U = np.random.random(nbr_bin)
-
-            # Solving the formel
-            q = (qmin**(eta_q+1.) + U*(qmax**(eta_q+1.) - qmin**(eta_q+1.)))**(1./(eta_q+1.))
-
-            # Tell the log
-            fid_log = open(log_name,'a')
-            fid_log.write('Assigned masses to the secondaries following a power-law distribution in mass ratio with exponent'+str(eta_q)+'. \n')
-            fid_log.close()
-
-
-        # This is for 1D polynomial:    dN/dq = eta_q*q + bb 
-        elif q_choice == 'linear_slope':
-
-            # Ok, now I will use a 1D polynomial to draw mass ratios from
-            # The distribution goes as dN/dq = eta_q*q + bb
-            # Find the bb that normalizes the distribution
-            bb = (1. - (eta_q/2.)*((qmax**2.) - (qmin**2.)))/(qmax-qmin)
-
-            # This is the random numbers between 0 and 1, they will be used for when inverting the CDF to get the q
-            U = np.random.random(nbr_bin)
-
-            # Now solving the pq formel
-            DD = -(eta_q/2.)*(qmin**2.) - bb*qmin - U
-            EE = (2./eta_q)*DD
-            q_minus = -(bb/eta_q) - np.sqrt((bb/eta_q)**2. - EE)
-            q_plus = -(bb/eta_q) + np.sqrt((bb/eta_q)**2. - EE)
-            q = np.zeros(nbr_bin)
-            ind_qminus = (q_minus < qmax)*(q_minus > qmin)*(((q_plus < qmin)+(q_plus > qmax))>0.)
-            ind_qplus = (q_plus < qmax)*(q_plus > qmin)*(((q_minus < qmin)+(q_minus > qmax))>0.)
-            q[ind_qminus] = q_minus[ind_qminus]
-            q[ind_qplus] = q_plus[ind_qplus]
-
-            # Tell the log
-            fid_log = open(log_name,'a')
-            fid_log.write('Assigned masses to the secondaries following a 1D polynomial distribution in mass ratio: dN/dq = '+str(eta_q)+'q + bb. \n')
-            fid_log.close()
-
-
-        # Assign masses to the secondaries
-        m2 = q*m[primary]
-
-        # Now the total mass is too high -> scale down again to the total mass we should have.
-        Mtot1 = np.sum(m)
-        Mtot2 = np.sum(m2)
-        Mtot = Mtot1 + Mtot2
-        n = 0
-        n2 = 0
-        while Mtot > Target_M:
-            Mtot1 = Mtot1-m[n]
-            if primary[n]: 
-                Mtot2 = Mtot2 - m2[n2]
-                n2 = n2+1
-            n = n+1
-            Mtot = Mtot1+Mtot2
-        m = m[n:]
-        primary = primary[n:]
-        single = single[n:]
-        birthday = birthday[n:]
-        # Total number of binary stars
-        nbr_bin = np.sum(primary)
-        # Total number of stars (counting binaries as 1 star)
-        nbr_stars = len(m)
-
-        # Update initial masses of primaries (m1) and secondaries (m2), initial mass ratio (q)
-        m1 = m[primary]
-        m2 = m2[n2:]
-        q = q[n2:]
-        # Set the birthday of the secondary to the same as the primary
-        birthday_m2 = copy.copy(birthday[primary])
-
-        # Tell the log
-        fid_log = open(log_name,'a')
-        fid_log.write('Removed some random stars so that the total mass is what we want. \n')
-        fid_log.write('Total mass: '+str(Mtot)+' MSun, '+str(nbr_bin)+' binaries \n')
-        fid_log.write('Set the birthday of the secondaries to the same as the primaries \n')
-        fid_log.close()
-
-
-        if iii == 0:
-            if save_figs:
-                # # # # Plot the q # # # # # # # #
-                fig, ax = plt.subplots(1,1,figsize=(6,4.5))
-                ax.hist(q,100)
-                ax.set_xlabel('Mass ratio, $q$')
-                ax.set_ylabel('Number stars')
-                ax.set_yticks([])
-                xtick = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
-                ax.set_xticks(xtick)
-                ax.set_xticklabels([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
-                for i in range(len(xtick)):
-                    ax.get_xaxis().majorTicks[i].set_pad(7)
-                ax.tick_params('both', length=8, width=1.5, which='major')
-                ax.tick_params('both', length=4, width=1.0, which='minor')
-                ax.tick_params(direction="in", which='both')
-                fig.savefig(plots_dir+'/q.png',format='png',bbox_inches='tight',pad_inches=0.1)
-                plt.close(fig)
-                # # # # # # # # # # # # # # # # # # 
-
-
-                # # # Check the IMF again! # # #
-                fig, ax1 = plt.subplots(1,1,figsize=(8,6))
-                ax1.hist(np.log10(np.concatenate([m,m2])),100,log=True,label='IMF including M2')
-                ax1.hist(np.log10(m),100,log=True,color='r',alpha=0.5,label='IMF excluding M2')
-                ax1.set_xlabel('$\\log_{10} (M/M_{\\odot})$')
-                ax1.set_ylabel('Number of stars')
-                ax1.tick_params(direction="in", which='both')
-                ax1.legend(loc=0,fontsize=0.8*fsize)
-                fig.savefig(plots_dir+'/IMF_update_after_q.png',format='png',bbox_inches='tight',pad_inches=0.1)
-                plt.close(fig)
-                # # # # # # # # # # # # # # # # #
-
-
-
-        # # # # # #  Period, P # # # # # # 
-        # 
-        # Period is picked randomly from distributions 
-
-        # Tell the log
-        fid_log = open(log_name,'a')
-        fid_log.write('\nPERIOD: Going to assign orbital periods to the systems... \n')
-        fid_log.close()
-
-        # Period limits:
-        # Pmin is P_ZAMS 
-        # Pmax = 10^3.5 or 10^3.7 days
-        # Starting from radius limits
-
-        # Interpolate using the numpy
-        R_ZAMS = np.interp(m1,m_grid,R_ZAMS_grid)
-        R_ZAMS = extrapolate(m1,R_ZAMS,m_grid,R_ZAMS_grid)
-
-        # Translate the above radii to periods at which the 
-        # star would fill its Roche Lobe
-        q_inv = 1.0/q    # This m1/m2
-        rL = 0.49*(q_inv**(2.0/3.0))/(0.69*(q_inv**(2.0/3.0)) + np.log(1.0+(q_inv**(1.0/3.0))))
-
-        # Period needed to fill Roche Lobe at ZAMS
-        a_tmp = (R_ZAMS/rL)*RSun_AU  # separation in AU
-        P_ZAMS = (4.0*(np.pi**2.0)*(a_tmp**3.0)/(G*(m1+m2)))**0.5    # Period in days
-
-        # Now to the period limits
-        P_min = copy.copy(P_ZAMS)        # in Sana+12 this is 10^0.15
-        # The maximum period is set at the beginning. 
-
-
-        # The combination of Opik (1924) and Sana et al. (2012) 
-        if P_choice == 'Opik_Sana':
-
-            # Period distribution. This is mass dependent. 
-            P = np.zeros(nbr_bin)
-
-            # # # # Massive stars
-            # Sana distribution (Sana+ 12):   dN/d(log P) = k*(log P)^-0.55
-
-            # When to apply the Sana period distribution? At O-star masses
-            ind_Sana = m1 >= Mlim_Sana
-            nbr_Sana = np.sum(ind_Sana)
-
-            # Draw from the distribution
-            uu = np.random.random(nbr_Sana)
-            kappa_P_Sana = -0.55    # this is from Sana+12
-            smin = np.log10(P_min[ind_Sana])
-            smin[smin < 0.15] = 0.15   # this is also from Sana+12 and lower doesn't work because of maths
-            smax = np.log10(P_max)
-            s = (smin**(kappa_P_Sana+1.) + uu*(smax**(kappa_P_Sana+1.) - smin**(kappa_P_Sana+1.)))**(1./(kappa_P_Sana+1.))
-            P_Sana = 10**s
-            P[ind_Sana] = P_Sana
-
-
-            # # # # Lower masses
-            # Opik's law -- I choose all other masses in this period distribution
-            ind_Opik = ind_Sana == 0
-            nbr_Opik = np.sum(ind_Opik)
-
-            # Opik's law is flat in log P space
-            uu = np.random.random(nbr_Opik)
-            P_Opik = 10**((np.log10(P_max)-np.log10(P_min[ind_Opik]))*uu + np.log10(P_min[ind_Opik]))
-            P[ind_Opik] = P_Opik
-
-            if iii == 0:
-                if save_figs:
-                    # # # # Plot the Period # # # # # # # #
-                    clr_l = np.array([ 212, 172, 13 ])/255.
-                    clr_h = np.array([211, 84, 0])/255.
-                    fig, ax = plt.subplots(1,1,figsize=(6,4.5))
-                    ax.hist(np.log10(P[m1>Mlim_Sana]),100,color=clr_h,edgecolor='none')
-                    ax.hist(np.log10(P[m1<Mlim_Sana][0:np.sum(m1>15)]),100,color=clr_l,edgecolor='none',alpha=0.7)
-                    ax.set_xlabel('Period [days]')
-                    ax.set_ylabel('Number of stars')
-                    xtick = [0,1,2,3]
-                    ax.set_xticks(xtick)
-                    ax.set_xticklabels([1, 10, 100, 1000])
-                    for i in range(len(xtick)):
-                        ax.get_xaxis().majorTicks[i].set_pad(7)
-                    ax.tick_params('both', length=8, width=1.5, which='major')
-                    ax.tick_params('both', length=4, width=1.0, which='minor')
-                    fig.savefig(plots_dir+'/P_fewstars.png',format='png',bbox_inches='tight',pad_inches=0.1)
-                    plt.close(fig)
-                    # # # # # # # # # # # # # # # # #
-
-
-            # Tell the log
-            fid_log = open(log_name,'a')
-            fid_log.write('Used the combination of Opik and Sana+12 for the period distribution\n')
-            fid_log.write('The minimum period for the Sana+12 distribution is '+str(10**0.15)+'days, while the Opik distribution goes to minimum possible period.\n')
-            fid_log.write('Ignoring widening via wind mass loss.\n')
-            if save_figs:
-                fid_log.write('Saved a plot in '+plots_dir+'\n\n')
-            fid_log.close()
-
-
-        # Power law:  dN/d(log P) = k*(log P)^kappa_P
-        elif P_choice == 'log_power':
-
-            # Period distribution.
-            uu = np.random.random(nbr_bin)
-            smin = np.log10(P_min)
-            smin[smin < 0.15] = 0.15   # This is so that the function below works (~1.4 days)
-            smax = np.log10(P_max)
-            s = (smin**(kappa_P+1.) + uu*(smax**(kappa_P+1.) - smin**(kappa_P+1.)))**(1./(kappa_P+1.))
-            P = 10**s       
-
-
-            if iii == 0:
-                if save_figs:
-                    # # # # Plot the Period # # # # # # # #
-                    fig, ax = plt.subplots(1,1,figsize=(6,4.5))
-                    ax.hist(np.log10(P),100,color='b',edgecolor='none')
-                    ax.set_xlabel('Period [days]')
-                    ax.set_ylabel('Number of stars')
-                    xtick = [0,1,2,3]
-                    ax.set_xticks(xtick)
-                    ax.set_xticklabels([1, 10, 100, 1000])
-                    for i in range(len(xtick)):
-                        ax.get_xaxis().majorTicks[i].set_pad(7)
-                    ax.tick_params('both', length=8, width=1.5, which='major')
-                    ax.tick_params('both', length=4, width=1.0, which='minor')
-                    fig.savefig(plots_dir+'/P.png',format='png',bbox_inches='tight',pad_inches=0.1)
-                    plt.close(fig)
-                    # # # # # # # # # # # # # # # # #
-
-
-            # Tell the log
-            fid_log = open(log_name,'a')
-            fid_log.write('Used the a power-law distribution that scales as ~ (log P)^'+str(kappa_P)+'\n')
-            fid_log.write('Ignoring widening via wind mass loss.\n')
-            if save_figs:
-                fid_log.write('Saved a plot in '+plots_dir+'\n\n')
-            fid_log.close()
-
-
-        # Flat in log P (meaning favors short periods still, Opik 24)
-        elif P_choice == 'log_flat':
-
-            # Period distribution. This is mass dependent. 
-            P = 10**(np.log10(P_min)+(np.log10(P_max)-np.log10(P_min))*np.random.random(nbr_bin))
-
-            if iii == 0:
-                if save_figs:
-                    # # # # Plot the Period # # # # # # # #
-                    fig, ax = plt.subplots(1,1,figsize=(6,4.5))
-                    ax.hist(np.log10(P),100,color='b',edgecolor='none')
-                    ax.set_xlabel('Period [days]')
-                    ax.set_ylabel('Number of stars')
-                    xtick = [0,1,2,3]
-                    ax.set_xticks(xtick)
-                    ax.set_xticklabels([1, 10, 100, 1000])
-                    for i in range(len(xtick)):
-                        ax.get_xaxis().majorTicks[i].set_pad(7)
-                    ax.tick_params('both', length=8, width=1.5, which='major')
-                    ax.tick_params('both', length=4, width=1.0, which='minor')
-                    fig.savefig(plots_dir+'/P.png',format='png',bbox_inches='tight',pad_inches=0.1)
-                    plt.close(fig)
-                    # # # # # # # # # # # # # # # # #
-
-
-            # Tell the log
-            fid_log = open(log_name,'a')
-            fid_log.write('Used the a power-law distribution that scales as ~ (log P)^0\n')
-            fid_log.write('Ignoring widening via wind mass loss.\n')
-            if save_figs:
-                fid_log.write('Saved a plot in '+plots_dir+'\n\n')
-            fid_log.close()
-    
-    
-
-
+        binaries_object.update_params(m = m, nbr_stars = nbr_stars, iii = iii, mmin = mmin, mmax = mmax)
+        primary,nbr_bin = binaries_object()
+
+        utils_object.write_log('Number of binaries: '+ str(nbr_bin)+ ' (not corrected for total mass yet) \n')
+        utils_object.write_log('\nMASS RATIO: Choosing masses of companions by randomly drawing from a mass ratio distribution \n')
+        single = primary==False
+        q_object.update_params(qmax = qmax, qmin = qmin, nbr_bin = nbr_bin, iii = iii, eta_q = eta_q, m = m, primary = primary, Target_M = Target_M, single = single, birthday = birthday)
+        primary, q, nbr_stars, nbr_bin, m1, m2, birthday, birthday_m2, single, m = q_object()
+
+        utils_object.write_log('\nPERIOD: Going to assign orbital periods to the systems... \n')
+
+        period_object.update_params(nbr_bin = nbr_bin, iii = iii, primary = primary, q = q, nbr_stars = nbr_stars, m1 = m1, m2 = m2, birthday = birthday, birthday_m2 = birthday_m2, single = single, m = m)
+        s,P = period_object()
 
         # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
         #                                                                             #
@@ -1653,7 +1041,6 @@ for iii in range(num_turns):
         # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #     
         #
         # Check which systems that will interact how (Case A, B, C and CEE)
-
 
         # Assign masses of the stripped stars
         # !!!! HERE: should we use core masses instead of extrapolating? !!!! 
@@ -1665,13 +1052,11 @@ for iii in range(num_turns):
         mstrip[ind_massive_stripped] = 10**np.interp(np.log10(m1[ind_massive_stripped]), np.log10(m_grid), np.log10(he_core_mass_TAMS)) 
 
         # Tell the log
-        fid_log = open(log_name,'a')
-        fid_log.write('Interpolation: Assigned masses to the stripped stars using interpolation in log10 for both mstrip and minit.\n')
-        fid_log.write('Instead of extrapolating, we use the He-core masses at TAMS for massive stripped stars\n')
-        fid_log.write('The code cannot handle Case A stripped star masses yet - simply assumes it is as stable Case B for all...\n\n')
-        fid_log.close()
-
-
+        
+        utils_object.write_log('Interpolation: Assigned masses to the stripped stars using interpolation in log10 for both mstrip and minit.\n')
+        utils_object.write_log('Instead of extrapolating, we use the He-core masses at TAMS for massive stripped stars\n')
+        utils_object.write_log('The code cannot handle Case A stripped star masses yet - simply assumes it is as stable Case B for all...\n\n')
+        
         # Going to update the period distribution
         Pfinal = copy.copy(P)
 
@@ -1692,10 +1077,7 @@ for iii in range(num_turns):
         R_maxHG[ind_tmp] = R_conv[ind_tmp]
 
         # Tell the log
-        fid_log = open(log_name,'a')
-        fid_log.write('Interpolation: The radius limits from the single star grid linearly with the initial masses\n')
-        fid_log.close()
-
+        utils_object.write_log('Interpolation: The radius limits from the single star grid linearly with the initial masses\n')
         # Translate the above radii to periods at which the 
         # star would fill its Roche Lobe
         q_inv = 1.0/q    # This m1/m2
@@ -1718,19 +1100,14 @@ for iii in range(num_turns):
         P_maxHG = (4.0*(np.pi**2.0)*(a_tmp**3.0)/(G*(m1+m2)))**0.5    # Period in days
 
         # Tell the log
-        fid_log = open(log_name,'a')
-        fid_log.write('Translated the radius limits to period limits using the Roche potential\n')
-        fid_log.close()
-
-
+        utils_object.write_log('Translated the radius limits to period limits using the Roche potential\n')
+        
         # # # # # Evolutionary channels and stripping set here
-
         # Evolutionary channels
         # Mergers
         ind_mergeA = (((P < P_ZAMS)+(P < P_min_crit) > 0)+                              # too short period
                      ((P >= P_ZAMS)*(P >= P_min_crit)*(P <= P_maxMS)*(q<q_crit_MS)))     # too small q, case A
         ind_mergeC = ((P > P_maxHG)*(q<q_crit_HG))                                      # too small q, case C
-
 
         # Case A stable mass transfer
         ind_caseA = (P >= P_ZAMS)*(P >= P_min_crit)*(P <= P_maxMS)*(q>=q_crit_MS)       # Stable RLOF, case A
@@ -1743,21 +1120,14 @@ for iii in range(num_turns):
         ind_caseB = (P > P_maxMS)*(P <= Ptmp)*(q>=q_crit_HG)                            # Stable RLOF, case B
 
         # Tell the log
-        fid_log = open(log_name,'a')
-        fid_log.write('Systems that go through stable Case A and stable Case B assigned... \n')
-        fid_log.write('Systems that merge during main sequence and after helium burnign assigned... \n')
-        fid_log.close()
-
-
+        utils_object.write_log('Systems that go through stable Case A and stable Case B assigned... \n')
+        utils_object.write_log('Systems that merge during main sequence and after helium burnign assigned... \n')
 
         # I am including a possibility to use the alpha-prescription (given at beginning)
         if alpha_prescription: 
 
             # Tell the log
-            fid_log = open(log_name,'a')
-            fid_log.write('Entering the alpha-prescription \n')
-            fid_log.close()
-
+            utils_object.write_log('Entering the alpha-prescription \n')
             # alpha-prescription is alpha = Delta_Ebind / Delta_Eorb
 
             # For which stars is this relevant?
@@ -1769,10 +1139,8 @@ for iii in range(num_turns):
             ind_alpha_pres = (ind_donor_convective + ind_small_q_HG) > 0
 
             # Tell the log
-            fid_log = open(log_name,'a')
-            fid_log.write('Assuming that common envelope is initiated either because q < q_crit_HG or the donor has a convective envelope \n')
-            fid_log.close()
-
+            
+            utils_object.write_log('Assuming that common envelope is initiated either because q < q_crit_HG or the donor has a convective envelope \n')
 
             # Calculate Delta_Ebind
             # Need the mass of the envelopes
@@ -1787,7 +1155,6 @@ for iii in range(num_turns):
             # equation to calculate the resulting separation between the two stars
             afinal = mstrip*m2/((m1*m2/ainit) - (2.*Delta_Ebind/(G*alpha_CE)))   # AU
 
-
             # The radius of the stripped stars are interpolated using the models
             rstrip = 10**np.interp(np.log10(mstrip),np.log10(mstrip_grid),np.log10(rstrip_grid))
             rstrip = 10**extrapolate(np.log10(mstrip),np.log10(rstrip),np.log10(mstrip_grid),np.log10(rstrip_grid))
@@ -1795,11 +1162,8 @@ for iii in range(num_turns):
             rstrip = rstrip*u.R_sun.to(u.AU)   # now in AU
 
             # Tell the log
-            fid_log = open(log_name,'a')
-            fid_log.write('Interpolation: The radii of the stripped stars were interpolated and extrapolated using log10 of mstrip and log10 of rstrip \n')
-            fid_log.close()    
-
-
+            utils_object.write_log('Interpolation: The radii of the stripped stars were interpolated and extrapolated using log10 of mstrip and log10 of rstrip \n')
+                
             # Check if the stars fit within the orbit: 
             #  a is semi-major axis of the circle where one star is static the other moving around the first 
             #  - i.e., the separation
@@ -1822,10 +1186,10 @@ for iii in range(num_turns):
             ind_caseB_CEE = (ind_fit_in_orbit * ind_alpha_pres) > 0.
 
             # Tell the log
-            fid_log = open(log_name,'a')
-            fid_log.write('Assuming that a binary survives common envelope if the two (assuming circular) stars both fit in the orbit.\n')
-            fid_log.write('It has then created a stripped star\n')
-            fid_log.close() 
+            
+            utils_object.write_log('Assuming that a binary survives common envelope if the two (assuming circular) stars both fit in the orbit.\n')
+            utils_object.write_log('It has then created a stripped star\n')
+             
 
             # The stars that merge during the common envelope initiated during HG evolution of the donor
             ind_mergeB = ((ind_fit_in_orbit == False)*ind_alpha_pres) > 0.
@@ -1835,34 +1199,26 @@ for iii in range(num_turns):
                                       (afinal[ind_caseB_CEE]**3.0)/(G*(mstrip[ind_caseB_CEE]+m2[ind_caseB_CEE])))**0.5)
 
             # Tell the log
-            fid_log = open(log_name,'a')
-            fid_log.write('Calculated the periods of the stripped star + companion systems that were created through CEE\n')
-            fid_log.close() 
-
-
+            
+            utils_object.write_log('Calculated the periods of the stripped star + companion systems that were created through CEE\n')
+             
         # If not using the alpha-prescription, follow roughly the figure of Manos (binary_c predictions + analytical)
         else:
             ind_caseB_CEE = (P > Ptmp)*(P <= P_maxHG)*(q>=q_crit_HG)                       # Unstable RLOF -> CEE, case B
             ind_mergeB = ((P > P_maxMS)*(P <= P_maxHG)*(q<q_crit_HG))                       # too small q, case B
 
             # Tell the log
-            fid_log = open(log_name,'a')
-            fid_log.write('NOT USING ALPHA-PRESCRIPTION: simple assumptions for which stars merge or successfully eject the envelope.\n')
-            fid_log.close() 
-
-
+            utils_object.write_log('NOT USING ALPHA-PRESCRIPTION: simple assumptions for which stars merge or successfully eject the envelope.\n')
+             
         # Case C (usually unstable, but also super short-lived)
         ind_caseC = (P > P_maxHG)*(q>=q_crit_HG)                                       # case C -> uncertain outcome
 
         # Tell the log
-        fid_log = open(log_name,'a')
-        fid_log.write('Assigned which stars enter mass transfer after helium burning (Case C) - no assumptions for what happen to these - too short-lived.\n')
-        fid_log.close() 
-
+        
+        utils_object.write_log('Assigned which stars enter mass transfer after helium burning (Case C) - no assumptions for what happen to these - too short-lived.\n')
+         
         # This index is for the mass range that we consider for interaction, in general
         ind_interaction_mass = (m1 <= Minit_strip_max)*(m1 >= Minit_strip_min)  # the stars that can strip
-
-
 
         # # # # # LIMITS to which stars we consider
         # 
@@ -1885,21 +1241,17 @@ for iii in range(num_turns):
         ind_mergeB = ind_mergeB*ind_interaction_mass   # Merger of XX+HG system, did not check what the evol state of M2 is.
         ind_mergeC = ind_mergeC*ind_interaction_mass   # Merger of XX+post-HG system
 
-
-
         # General indices for the binary products
         ind_strip = (ind_caseA+ind_caseB+ind_caseB_CEE)>0
         ind_merge = (ind_mergeA+ind_mergeB)>0
 
         # Tell the log
-        fid_log = open(log_name,'a')
-        fid_log.write('Updated which stars that interact in which way... \n')
-        fid_log.close() 
-
-
+        utils_object.write_log('Updated which stars that interact in which way... \n')
 
     # # # # # LIFETIMES of the stars
     # (back to both singles and binaries)
+    if not compute_binaries:
+        single = primary==False #This is because in the original code primary was set false after computing fbin. The updated version computes both fbin and q at the same time, thus the primary variable obtained after computing fbin is not the same as the one obtained after computing q. This is a temporary fix to make sure that the rest of the code works.
 
     if compute_magnetic == False:
         ind_life = lifetime_grid > 0.
@@ -1910,9 +1262,7 @@ for iii in range(num_turns):
         t_lifetime_m = 10**np.interp(np.log10(m), np.log10(m_grid[ind_life]), np.log10(lifetime_grid[ind_life]))
         t_lifetime_m = 10**extrapolate(np.log10(m), np.log10(t_lifetime_m), 
                                        np.log10(m_grid[ind_life]), np.log10(lifetime_grid[ind_life]))
-
     else:
-        
         # 1st 2D interpolation - easy one - the lifetime of the stars
         # Get the grid to interpolate over - no changes, assuming it is smooth
         # Masses
@@ -1934,8 +1284,6 @@ for iii in range(num_turns):
         # No extrapolation... 
         #t_lifetime_m[ind_mo] = 10**extrapolate(np.log10(m[ind_mo]), np.log10(t_lifetime_m[ind_mo]), 
         #                               np.log10(m_grid_B), np.log10(lifetime_grid_B[0]))
-
-        
         # Save a figure with this
         if iii == 0:
             if save_figs:
@@ -1952,20 +1300,16 @@ for iii in range(num_turns):
                 # # # # # # # # # # # # # # # # #
             
             # Tell the log about the success. 
-            fid_log = open(log_name,'a')
-            fid_log.write('First 2D interpolation done! - lifetimes \n')
-            fid_log.close()
-        
-        
+            utils_object.write_log('First 2D interpolation done! - lifetimes \n')
+    
     if compute_binaries:
         t_lifetime_m2 = 10**np.interp(np.log10(m2), np.log10(m_grid[ind_life]), np.log10(lifetime_grid[ind_life]))
         t_lifetime_m2 = 10**extrapolate(np.log10(m2), np.log10(t_lifetime_m2), 
                                         np.log10(m_grid[ind_life]), np.log10(lifetime_grid[ind_life]))
 
     # Tell the log
-    fid_log = open(log_name,'a')
-    fid_log.write('Interpolation: Assigned lifetimes of the stars (single stellar grid) \n')
-    fid_log.close() 
+    utils_object.write_log('Interpolation: Assigned lifetimes of the stars (single stellar grid) \n')
+     
 
     if compute_magnetic == False:
         # Main sequence lifetimes [yrs]
@@ -1976,12 +1320,10 @@ for iii in range(num_turns):
             t_MS_m2 = 10**extrapolate(np.log10(m2), np.log10(t_MS_m2), np.log10(m_grid), np.log10(MS_duration_grid))
 
         # Tell the log
-        fid_log = open(log_name,'a')
-        fid_log.write('Interpolation: Assigned main sequence durations of the stars (single stellar grid) \n')
-        fid_log.close() 
+        utils_object.write_log('Interpolation: Assigned main sequence durations of the stars (single stellar grid) \n')
+         
 
     else:
-        
         # Main sequence lifetimes [yrs]
         z = np.log10(np.array(MS_duration_grid_B))
         f = interpolate.RegularGridInterpolator((np.log10(m_grid_B),B_strength_grids), z.T)
@@ -1998,10 +1340,8 @@ for iii in range(num_turns):
         t_MS_m[m>np.max(m_grid_B)] = np.min(t_MS_m[ind_m])  
         
         # Tell the log
-        fid_log = open(log_name,'a')
-        fid_log.write('2D Interpolation: Assigned main-sequence durations of the stars (magnetic single stellar grid) \n')
-        fid_log.close() 
-        
+        utils_object.write_log('2D Interpolation: Assigned main-sequence durations of the stars (magnetic single stellar grid) \n')
+              
     if compute_binaries:
         # Duration of the stripped phase [yrs]
         t_strip = 10**np.interp(np.log10(mstrip),np.log10(mstrip_grid[ind_full_strip]),
@@ -2009,17 +1349,13 @@ for iii in range(num_turns):
         # # # UPDATE HERE: instead of extrapolating, use realistic ages from pure helium star models. / Ylva 28 Feb 2022 
         t_strip = 10**extrapolate(np.log10(mstrip),np.log10(t_strip),
                                   np.log10(mstrip_grid[ind_full_strip]),np.log10(strip_duration_grid[ind_full_strip]))
-
-        # Tell the log
-        fid_log = open(log_name,'a')
-        fid_log.write('Interpolation: Assigned durations of the stripped phases (binary stellar grid) \n')
-        fid_log.close() 
+        # Tell the log  
+        utils_object.write_log('Interpolation: Assigned durations of the stripped phases (binary stellar grid) \n')  
 
         # Timescales for the primary in the binary systems
         birthday_m1 = birthday[primary]  # When they are born
         t_MS_m1 = t_MS_m[primary]        # How long their main sequence is
         t_lifetime_m1 = t_lifetime_m[primary]
-
         # Update the lifetimes of the stars that strip
         # For the stripped stars this is just the main sequence lifetime + the time as stripped
         lifetime_m_strip = t_MS_m1[ind_strip]+t_strip[ind_strip]
@@ -2028,11 +1364,7 @@ for iii in range(num_turns):
         t_lifetime_m[primary] = t_lifetime_m1
 
         # Tell the log
-        fid_log = open(log_name,'a')
-        fid_log.write('Updating the lifetimes of stars that get stripped to tau_MS + tau_strip (somewhat inaccurate for Case A) \n')
-        fid_log.close() 
-
-
+        utils_object.write_log('Updating the lifetimes of stars that get stripped to tau_MS + tau_strip (somewhat inaccurate for Case A) \n')
 
         # # # # # MASS ACCRETION EFFICIENCY, beta
         # 
@@ -2040,35 +1372,25 @@ for iii in range(num_turns):
 
         # Initiate an array with the masses of the secondaries, to begin with nothing has been changed
         m2_after_interaction = copy.copy(m2)
-
         # Assign masses of secondaries after interaction (interaction occurs once primary has reached HG so after t_MS_m)
         m2_after_interaction[ind_caseA] = m2_after_interaction[ind_caseA] + beta_MS*menv[ind_caseA]
         m2_after_interaction[ind_caseB] = m2_after_interaction[ind_caseB] + beta_HG*menv[ind_caseB]
         m2_after_interaction[ind_caseB_CEE] = m2_after_interaction[ind_caseB_CEE] + beta_HG_CEE*menv[ind_caseB_CEE]
 
-        # Tell the log
-        fid_log = open(log_name,'a')
-        fid_log.write('Calculated the post-interaction masses of the secondaries with stripped stars. \n')
-        fid_log.close() 
-
-
+        # Tell the log       
+        utils_object.write_log('Calculated the post-interaction masses of the secondaries with stripped stars. \n')
+        
         # This array is for the primaries after interaction (if it occurred), i.e., stripped stars and mergers
         m1_after_interaction = copy.copy(m1)
-
         # Edit the masses of the primaries that became stripped stars
         m1_after_interaction[ind_strip] = mstrip[ind_strip]
-
-
         # Mergers: m1+m2, beta = 1
         m2_after_interaction[ind_merge] = 0.   # All mergers lose the secondary star
         m1_after_interaction[ind_merge] = m1[ind_merge] + m2[ind_merge]  # and the merger products are saved in the primary
 
         # Tell the log
-        fid_log = open(log_name,'a')
-        fid_log.write('Assuming that mergers are conservative and no mass is lost from the systems. -> dont trust the mergers too much \n')
-        fid_log.close() 
-
-
+        utils_object.write_log('Assuming that mergers are conservative and no mass is lost from the systems. -> dont trust the mergers too much \n')
+         
         if iii == 0:
             if save_figs:
                 # # # # Plot the M_before - M_after # # # # # # # #
@@ -2120,129 +1442,29 @@ for iii in range(num_turns):
                 # # # # # # # # # # # # # # # # #
 
                 # Tell the log
-                fid_log = open(log_name,'a')
-                fid_log.write('Saving a before-after diagram of masses\n')
-                fid_log.write('Saving a Mstrip-M2 diagram\n\n')
-                fid_log.close() 
+                utils_object.write_log('Saving a before-after diagram of masses\n')
+                utils_object.write_log('Saving a Mstrip-M2 diagram\n\n')
 
-
-
-        # # # # # PERIODS AFTER INTERACTION
-        #
-        # Below - lots of calculations -> check if you want, but don't erase. 
-        # 
-        # Non-conservative mass transfer.
-        # 
-        # See Onno Pols lecture notes on binaries for reaching the equation below:
-        # 
-        # $\dfrac{\dot{a}}{a} = -2 \dfrac{\dot{M}_d}{M_d} \left( 1 - \beta \dfrac{M_d}{M_a} - (1-\beta) (\gamma +\frac{1}{2})\dfrac{M_d}{M_d + M_a} \right)$
-        # 
-        # It can also be written as
-        # 
-        # $\dfrac{\dot{a}}{a} = -2\left( \dfrac{\dot{M}_d}{M_d} + \dfrac{\dot{M}_a}{M_a} - (\gamma +\dfrac{1}{2})\dfrac{\dot{M}}{M} \right)$
-        # 
-        # where $M = M_d + M_a$, $M_a$ is the mass of the accretor, and $M_d$ is the mass of the donor. This is because $\dot{M}_d = - \beta \dot{M}_a$ and therefore also $\dot{M} = \dot{M}_d + \dot{M}_a  = (1-\beta)\dot{M}_d$.
-        # 
-        # To begin with, we can remove the time dependence:
-        # 
-        # $\dfrac{\dot{a}}{a} = \dfrac{da}{a}/dt$
-        # 
-        # $-2\left( \dfrac{\dot{M}_d}{M_d} + \dfrac{\dot{M}_a}{M_a} - (\gamma +\dfrac{1}{2})\dfrac{\dot{M}}{M} \right) = -2\left( \dfrac{dM_d}{M_d} + \dfrac{dM_a}{M_a} -  (\gamma + \dfrac{1}{2})\dfrac{dM}{M} \right)/dt$
-        # 
-        # $\dfrac{da}{a} = -2\left( \dfrac{dM_d}{M_d} + \dfrac{dM_a}{M_a} -  (\gamma + \dfrac{1}{2})\dfrac{dM}{M} \right)$
-        # 
-        # To solve this, we start with the left-hand-side (LHS) of the equation, integrating it:
-        # 
-        # $\int_{a_i}^{a_f}\dfrac{da}{a} = \int_{\ln a_i}^{\ln  a_f} d\ln a = \ln a_f - \ln a_i = \ln  \left( \dfrac{a_f}{a_i} \right)$
-        # 
-        # The right hand side (RHS) is also integrated
-        # 
-        # $-2\left( \int_{M_{d,i}}^{M_{d,f}} \dfrac{dM_d}{M_d} + \int_{M_{a,i}}^{M_{a,f}} \dfrac{dM_a}{M_a} - \int_{M_i}^{M_f} (\gamma + \dfrac{1}{2})\dfrac{dM}{M} \right)$
-        # 
-        # ### Constant $\gamma$
-        # Assuming that $\gamma$ is a constant gives
-        # 
-        # $-2\left( \int_{\ln M_{d,i}}^{\ln M_{d,f}} d\ln M_d + \int_{\ln M_{a,i}}^{\ln M_{a,f}} d\ln M_a - (\gamma + \dfrac{1}{2}) \int_{\ln M_i}^{\ln M_f} d\ln M \right)$
-        # 
-        # $-2\left(\ln M_{d,f} - \ln M_{d,i} + \ln M_{a,f} - \ln M_{a,i} - (\gamma + \dfrac{1}{2})(\ln M_f -  \ln M_i)\right)$
-        # 
-        # $-2 \left( \ln \dfrac{M_{d,f} M_{a,f}}{M_{d,i} M_{a,i}} - (\gamma + \dfrac{1}{2})\ln \dfrac{M_f}{M_i} \right)$
-        # 
-        # $\ln \left(\dfrac{M_{d,f} M_{a,f}}{M_{d,i} M_{a,i}}\right)^{-2} + \ln \left(\dfrac{M_{d,f} + M_{a,f}}{M_{d,i} + M_{a,i}}\right)^{2\gamma+1}$
-        # 
-        # $\ln \left( \left(\dfrac{M_{d,i} M_{a,i}}{M_{d,f} M_{a,f}}\right)^{2} \left(\dfrac{M_{d,f} + M_{a,f}}{M_{d,i} + M_{a,i}}\right)^{2\gamma+1}  \right)$
-        # 
-        # Putting the LHS and RHS together means that:
-        # 
-        # $\dfrac{a_f}{a_i} = \left(\dfrac{M_{d,i} M_{a,i}}{M_{d,f} M_{a,f}}\right)^{2} \left(\dfrac{M_{d,f} + M_{a,f}}{M_{d,i} + M_{a,i}}\right)^{2\gamma+1}$
-        # 
-        # ### Isotropic re-emission
-        # In case the mass transfer efficiency is 1 ($\beta = 1$), the $dM$ term disappears, meaning that it is independent on whether $\gamma$ is a constant or not. Then 
-        # 
-        # $\dfrac{a_f}{a_i} =  \left( \dfrac{M_{d,i}M_{a,i}}{M_{d,f}M_{a,f}} \right)^2$
-        # 
-        # I case the mass transfer was completely non-conservative ($\beta = 0$), then $M_a$ is a constant. That means that we can account for isotropic re-emission and set $\gamma = M_d/M_a = (M - M_a)/M_a = M/M_a - 1$. This results in:
-        # 
-        # $\int _{M_i}^{M_f} (\gamma + \dfrac{1}{2}) \dfrac{dM}{M} = \int _{M_i}^{M_f} (\dfrac{M}{M_a} - \dfrac{1}{2}) \dfrac{dM}{M} = \dfrac{1}{M_a} \int_{M_i}^{M_f} dM - \dfrac{1}{2}\int_{\ln M_i}^{\ln M_f} d\ln M = \dfrac{M_f - M_i}{M_a} + \ln (M_i/M_f)^{1/2}$
-        # 
-        # which means that then 
-        # 
-        # $\ln \dfrac{a_f}{a_i} = \ln \left( \dfrac{M_{d,i}M_{a,i}}{M_{d,f}M_{a,f}} \right)^2 + 2\dfrac{M_f - M_i}{M_a} + \ln (M_i/M_f)$
-        # 
-        # 
-        # ### Circumbinary ring
-        # In the case of a circumbinary ring, the $\gamma = \dfrac{(M_d + M_a)^2}{M_d M_a} \sqrt{\dfrac{a_{\rm ring}}{a}}$. Following Artymowicz \& Lubow 1994, we set $a_{ring} = 2a$ and get $\gamma = \sqrt{2}\dfrac{(M_d + M_a)^2}{M_d M_a}$ (see also Zapartas et al. 2017a). 
-        # 
-        # For fully non-conservative mass transfer ($\beta = 0$), $M_a$ is constant. This means that the RHS becomes
-        # 
-        # $-2\left( \int_{M_{d,i}}^{M_{d,f}} \dfrac{dM_d}{M_d} + \int_{M_{a,i}}^{M_{a,f}} \dfrac{dM_a}{M_a} - \int_{M_i}^{M_f} (\gamma + \dfrac{1}{2})\dfrac{dM}{M} \right) = -2 \ln \left( \dfrac{M_{d,f}}{M_{d,i}} \right) + 2 \int _{M_i}^{M_f} \gamma \dfrac{dM}{M} + \int _{M_i}^{M_f} \dfrac{dM}{M} = -2 \ln \left( \dfrac{M_{d,f}}{M_{d,i}} \right) + \dfrac{2\sqrt{2}}{M_a} \int _{M_i}^{M_f} \dfrac{M}{(M-M_a)} dM + \ln \left( \dfrac{M_f}{M_i} \right) = -2 \ln \left( \dfrac{M_{d,f}}{M_{d,i}} \right) + \dfrac{2\sqrt{2}}{M_a} \left( M_a \ln \left( \dfrac{M_f - M_a}{M_i-M_a} \right) + M_f - M_i \right) + \ln \left( \dfrac{M_f}{M_i} \right) $
-        # 
-        # And can then be equaled with the left-hand side
-        # 
-        # For fully conservative mass transfer, the integral with the $\gamma$ disappears since $M$ is a constant. The separation is then calculated in the same way as for the other cases:
-        # 
-        # $\dfrac{a_f}{a_i} =  \left( \dfrac{M_{d,i}M_{a,i}}{M_{d,f}M_{a,f}} \right)^2$
-        # 
-        # 
-        # ### Fast wind
-        # Should I calculate this? Is this necessary? ($\gamma = M_a/M_d$)
-        # 
-        # ### Step from separation to period
-        # 
-        # And, finally, the separation $a$ can be translated to a period using Kepler III:
-        # 
-        # $\dfrac{P^2}{a^3} = \dfrac{4\pi}{G(M_d + M_a)}$
-        # 
-        # where the gravitational constant $G = 4\pi $ AU$^3 $ yr$^{-2} M_{\odot}^{-1}$ 
-
-        # Tell the log
-        fid_log = open(log_name,'a')
-        fid_log.write('Calculating new periods following the treatment of angular momentum assumed during mass transfer.\n')
-        fid_log.close() 
-
-
+        ###SEE PERIOD AFTER INTERACTION IN THEORY DOCUMENTATION
+        # Tell the log  
+        utils_object.write_log('Calculating new periods following the treatment of angular momentum assumed during mass transfer.\n')
+         
         # Calculate the period distribution after mass transfer (RLOF)
-
         # Isotropic re-emission
         # -- only works for beta = 0 or beta = 1 
         if angmom == 'isotropic_reemission':
-
             # Tell the log
-            fid_log = open(log_name,'a')
-            fid_log.write('Going to use isotropic re-emission...\n')
-            fid_log.close() 
-
+            utils_object.write_log('Going to use isotropic re-emission...\n')
+             
             # CASE A MASS TRANSFER
             # In case A mass transfer is fully conservative
             if beta_MS == 1.:
-
                 # The final integral on the right side can be removed
                 afinal[ind_caseA] = (ainit[ind_caseA]*
                          ((m1[ind_caseA]*m2[ind_caseA]/(mstrip[ind_caseA]*m2_after_interaction[ind_caseA]))**2.))
 
             # If case A mass transfer is fully non-conservative
             elif beta_MS == 0.:
-
                 # Since this is isotropic re-emission I add the corresponding terms to the equation
                 Mi = m1[ind_caseA] + m2[ind_caseA]
                 Mf = mstrip[ind_caseA] + m2_after_interaction[ind_caseA]
@@ -2251,15 +1473,11 @@ for iii in range(num_turns):
                 afinal[ind_caseA] = ainit[ind_caseA]*np.exp(RHS)
 
             else:
-                fid_log = open(log_name,'a')
-                fid_log.write('ERROR: isotropic re-emission currently only works for beta = 1 or 0!\n')
-                fid_log.close() 
-
-
+                utils_object.write_log('ERROR: isotropic re-emission currently only works for beta = 1 or 0!\n')
+ 
             # CASE B MASS TRANSFER
             # Same idea as for Case A mass transfer
             if beta_HG  == 1.:
-
                 # The final integral on the right side can be removed
                 afinal[ind_caseB] = (ainit[ind_caseB]*
                          ((m1[ind_caseB]*m2[ind_caseB]/(mstrip[ind_caseB]*m2_after_interaction[ind_caseB]))**2.))
@@ -2274,21 +1492,15 @@ for iii in range(num_turns):
                       2.*(Mf-Mi)/m2_after_interaction[ind_caseB] + np.log(Mi/Mf))
                 afinal[ind_caseB] = ainit[ind_caseB]*np.exp(RHS)
 
-            else:
-                fid_log = open(log_name,'a')
-                fid_log.write('ERROR: isotropic re-emission currently only works for beta = 1 or 0!\n')
-                fid_log.close() 
-
-
+            else: 
+                utils_object.write_log('ERROR: isotropic re-emission currently only works for beta = 1 or 0!\n')
+                 
         # Circumbinary ring
         # -- only works for beta = 0 or beta = 1 
         elif angmom == 'circumbinary_ring':
-
             # Tell the log
-            fid_log = open(log_name,'a')
-            fid_log.write('Going to use circumbinary ring...\n')
-            fid_log.close() 
-
+            utils_object.write_log('Going to use circumbinary ring...\n')
+             
             # CASE A MASS TRANSFER:
             # In case A mass transfer is fully conservative
             if beta_MS == 1.:
@@ -2310,20 +1522,15 @@ for iii in range(num_turns):
 
                 # The separation after mass transfer (equal LHS and RHS)
                 afinal[ind_caseA] = ainit[ind_caseA]*np.exp(RHS)
-
             else:
-                fid_log = open(log_name,'a')
-                fid_log.write('ERROR: circumbinary ring currently only works for beta = 1 or 0!\n')
-                fid_log.close()         
-
+                utils_object.write_log('ERROR: circumbinary ring currently only works for beta = 1 or 0!\n')
+                         
             # CASE B MASS TRANSFER
             # In case B mass transfer is fully conservative
             if beta_HG  == 1.:
-
                 # The final integral on the right side can be removed
                 afinal[ind_caseB] = (ainit[ind_caseB]*
                          ((m1[ind_caseB]*m2[ind_caseB]/(mstrip[ind_caseB]*m2_after_interaction[ind_caseB]))**2.))    
-
 
             # In case B mass transfer is fully non-conservative
             elif beta_HG == 0.:
@@ -2340,20 +1547,13 @@ for iii in range(num_turns):
                 afinal[ind_caseB] = ainit[ind_caseB]*np.exp(RHS)
 
             else:
-                fid_log = open(log_name,'a')
-                fid_log.write('ERROR: circumbinary ring currently only works for beta = 1 or 0!\n')
-                fid_log.close()            
-
-
+                utils_object.write_log('ERROR: circumbinary ring currently only works for beta = 1 or 0!\n')
+                            
         # Constant gamma
         # -- works for all beta
         elif angmom == 'gamma_constant':
-
             # Tell the log
-            fid_log = open(log_name,'a')
-            fid_log.write('Going to use constant gamma...\n')
-            fid_log.close() 
-
+            utils_object.write_log('Going to use constant gamma...\n')
             # Separation in AU
             # Case A mass transfer 
             afinal[ind_caseA] = (ainit[ind_caseA]*
@@ -2364,9 +1564,6 @@ for iii in range(num_turns):
                          ((m1[ind_caseB]*m2[ind_caseB]/(mstrip[ind_caseB]*m2_after_interaction[ind_caseB]))**2.)* 
                          ((m2_after_interaction[ind_caseB]+mstrip[ind_caseB]/(m2[ind_caseB]+m1[ind_caseB]))**(2.*gamma_HG + 1.)))
 
-
-
-
         # # # FINAL PERIOD # # #    
         # Calculate the periods after interaction from the separations (days)
         Pfinal[ind_caseA] = ((4.0*(np.pi**2.0)*
@@ -2375,11 +1572,8 @@ for iii in range(num_turns):
                                       (afinal[ind_caseB]**3.0)/(G*(mstrip[ind_caseB]+m2[ind_caseB])))**0.5)
 
         # Tell the log
-        fid_log = open(log_name,'a')
-        fid_log.write('Updated the periods of systems that go through Case A and Case B stable mass transfer.\n')
-        fid_log.close() 
-
-
+        utils_object.write_log('Updated the periods of systems that go through Case A and Case B stable mass transfer.\n')
+         
         # Now, it could be that some of the systems merged during actual stable mass transfer (circumbinary ring)
         # We therefore update the indices here for what star becomes a stripped star
 
@@ -2410,9 +1604,8 @@ for iii in range(num_turns):
 
 
         # Tell the log
-        fid_log = open(log_name,'a')
-        fid_log.write('Also thought about systems that tighten and removed the ones that did not fit in the orbit anymore.\n')
-        fid_log.close() 
+        utils_object.write_log('Also thought about systems that tighten and removed the ones that did not fit in the orbit anymore.\n')
+         
 
         if iii == 0:
             if save_figs:
@@ -2429,23 +1622,8 @@ for iii in range(num_turns):
                 # # # # # # # # # # # # # # # # #
 
                 # Tell the log
-                fid_log = open(log_name,'a')
-                fid_log.write('Saved a period distribution diagram for after interaction.\n\n')
-                fid_log.close() 
+                utils_object.write_log('Saved a period distribution diagram for after interaction.\n\n')
 
-
-        # # # # # REJUVENATION
-        # 
-        # From Tout et al. (1997) there is in Section 5.1 a treatment for rejuvenation. 
-        # 
-        # $t' = \dfrac{\mu}{\mu '}\dfrac{\tau_{\text{MS}} '}{\tau_{\text{MS}}} t$
-        # 
-        # where $t'$ is the apparent age of the star right after mass accretion, $t$ is the apparent age of the star if it wouldn't have been rejuvenated, $\tau_{\text{MS}}$ is the main sequence lifetime of the accretor prior to accretion, $\tau_{\text{MS}}'$ is the main sequence lifetime for a star with the initial mass that is the same of the accretor after mass accretion. The parameters $\mu$ are included when the accretor has a convective core and are then $\mu = M_2$ and $\mu ' = M_2  '$.
-        # 
-        # This means that a star that is rejuvenated lives $t-t'$ years in addition to the new assumed lifetime of the star.
-
-
-        # # # ADD REJUVENATION # # # 
 
         # Assign a lifetime of the mergers
         t_lifetime_merger = 10**np.interp(np.log10(m1_after_interaction),
@@ -2468,9 +1646,8 @@ for iii in range(num_turns):
         t_MS_acc[ind_merge==False] = 10**extrapolate(np.log10(m2_after_interaction[ind_merge==False]), np.log10(t_MS_acc[ind_merge==False]), np.log10(m_grid), np.log10(MS_duration_grid))
 
         # Tell the log
-        fid_log = open(log_name,'a')
-        fid_log.write('Interpolation: New lifetimes and main sequence durations of the accretors and mergers. \n')
-        fid_log.close() 
+        utils_object.write_log('Interpolation: New lifetimes and main sequence durations of the accretors and mergers. \n')
+         
 
         # Set current age and apparent age at the time of the mass accretion
         #   For the mergers
@@ -2480,15 +1657,11 @@ for iii in range(num_turns):
         age_event_m2 = copy.copy(t_MS_m1)
         apparent_age_after_event_m2 = copy.copy(age_event_m2)
 
-
         if rejuv_choice == 'Tout97':
-
             # Tell the log
-            fid_log = open(log_name,'a')
-            fid_log.write('Using the method from Tout et al. (1997) to simulate the rejuvenation of accretors. \n')
-            fid_log.write('Concerning mergers: this only works for mergers that occurred during the main sequence.\n')
-            fid_log.close() 
-
+            utils_object.write_log('Using the method from Tout et al. (1997) to simulate the rejuvenation of accretors. \n')
+            utils_object.write_log('Concerning mergers: this only works for mergers that occurred during the main sequence.\n')
+             
             # Implementing the rejuvenation method of Tout et al. (1997) (used also in the BSE, Hurley+00,02)
             # This rejuvenation is for mass gainers and not mergers
             ind_c = ((m2 < 0.3)+(m2 > 1.3))>0  # These are stars with convective insides, mu = m2, mu_p = m2_after_interaction
@@ -2508,10 +1681,9 @@ for iii in range(num_turns):
                                                       (t_MS_acc[ind_strip]/t_MS_m2[ind_strip])*age_event_m2[ind_strip])
 
             # Tell the log
-            fid_log = open(log_name,'a')
-            fid_log.write('Rejuvenated the accretors (these are all main sequence stars at the stripping time). \n')
-            fid_log.close()    
-
+            
+            utils_object.write_log('Rejuvenated the accretors (these are all main sequence stars at the stripping time). \n')
+                
             # For the mergers, I only rejuvenate the MSMS mergers
             #print 'Only employing rejuvenation for the MSMS mergers'
             mu[ind_merge] = m1[ind_merge]
@@ -2523,12 +1695,9 @@ for iii in range(num_turns):
                                                        (t_MS_merger[ind_merge]/t_MS_m1[ind_merge])*age_event_m1[ind_merge])
 
             # Tell the log
-            fid_log = open(log_name,'a')
-            fid_log.write('Rejuvenated the MSMS mergers \n')
-            fid_log.close()   
-
-
-
+            
+            utils_object.write_log('Rejuvenated the MSMS mergers \n')
+               
 
         if iii == 0:
             if save_figs:
@@ -2566,9 +1735,9 @@ for iii in range(num_turns):
                 # # # # # # # # # # # # # # # # #
 
                 # Tell the log
-                fid_log = open(log_name,'a')
-                fid_log.write('Saved a figure for rejuvenation \n\n')
-                fid_log.close() 
+                
+                utils_object.write_log('Saved a figure for rejuvenation \n\n')
+                 
 
 
 
@@ -2593,9 +1762,9 @@ for iii in range(num_turns):
         eval_time = copy.copy(evaluation_time[et]) 
 
         # Tell the log
-        fid_log = open(log_name,'a')
-        fid_log.write('Starting to evaluate population after '+str(eval_time)+' years.\n')
-        fid_log.close() 
+        
+        utils_object.write_log('Starting to evaluate population after '+str(eval_time)+' years.\n')
+         
 
 
         # I will introduce arrays with the apparent age
@@ -2675,9 +1844,9 @@ for iii in range(num_turns):
             stars_present = apparent_age_m != 0
 
         # Tell the log
-        fid_log = open(log_name,'a')
-        fid_log.write('Assigned apparent ages of the stars that are present in the population. \n\n')
-        fid_log.close() 
+        
+        utils_object.write_log('Assigned apparent ages of the stars that are present in the population. \n\n')
+         
 
 
         # # # # # EVOLUTIONARY STAGE # # # # #
@@ -2797,10 +1966,10 @@ for iii in range(num_turns):
             present_state[primary] = present_state_m1
 
         # Tell the log
-        fid_log = open(log_name,'a')
-        fid_log.write('Checked the evolutionary states of the stars at the evaluation time. \n')
-        fid_log.write('I have neglected late interaction objects. \n\n')
-        fid_log.close() 
+        
+        utils_object.write_log('Checked the evolutionary states of the stars at the evaluation time. \n')
+        utils_object.write_log('I have neglected late interaction objects. \n\n')
+         
 
 
         #_________________________________________________
@@ -3026,11 +2195,11 @@ for iii in range(num_turns):
 
 
         # Tell the log
-        fid_log = open(log_name,'a')
-        fid_log.write('Interpolation prepared for main sequence, post-main sequence, and stripped stars (if included) \n')
-        fid_log.write('Allowing for extrapolation at the edges if the model did not reach central helium depletion.\n')
-        fid_log.write('(Just assuming the star has the same properties until when central helium depletion is expected.) \n')
-        fid_log.close() 
+        
+        utils_object.write_log('Interpolation prepared for main sequence, post-main sequence, and stripped stars (if included) \n')
+        utils_object.write_log('Allowing for extrapolation at the edges if the model did not reach central helium depletion.\n')
+        utils_object.write_log('(Just assuming the star has the same properties until when central helium depletion is expected.) \n')
+         
 
         if iii == 0:
             if save_figs:
@@ -3098,7 +2267,7 @@ for iii in range(num_turns):
                 # Main-sequence interpolation verification plots
                 else:
                     # Make a plot for each parameter
-                    cmap = matplotlib.cm.get_cmap('plasma')
+                    cmap = matplotlib.colormaps['plasma']#cm.get_cmap('plasma')
                     CC = 5
                     RR = int(np.ceil(len(col)/np.float_(CC)))
                     fig, axes = plt.subplots(RR,CC,figsize=(15,15))
@@ -3206,9 +2375,9 @@ for iii in range(num_turns):
                                          duration_strip[ind_strip_present])
 
         # Tell the log
-        #fid_log = open(log_name,'a')
-        #fid_log.write('Preparing for interpolation.... \n')
-        #fid_log.close() 
+        #
+        #utils_object.write_log('Preparing for interpolation.... \n')
+        # 
 
 
 
@@ -3243,9 +2412,9 @@ for iii in range(num_turns):
         ind_t_scaled_pMS = ((np.min(abs_tmp,axis=1)*np.ones([num_t,1])).T) == abs_tmp
 
         # Tell the log
-        #fid_log = open(log_name,'a')
-        #fid_log.write('Preparing for interpolation 2.... \n')
-        #fid_log.close() 
+        #
+        #utils_object.write_log('Preparing for interpolation 2.... \n')
+        # 
 
 
         if compute_binaries:
@@ -3341,12 +2510,12 @@ for iii in range(num_turns):
 
 
         # Tell the log
-        fid_log = open(log_name,'a')
-        fid_log.write('Used the interpolation scheme to find properties of the stars \n')
+        
+        utils_object.write_log('Used the interpolation scheme to find properties of the stars \n')
         if compute_binaries:
-            fid_log.write('I extrapolated the properties for the secondaries with M < 2 Msun\n')
-            fid_log.write('I also allowed for extrapolation to higher initial masses for stripped stars\n')
-        fid_log.close() 
+            utils_object.write_log('I extrapolated the properties for the secondaries with M < 2 Msun\n')
+            utils_object.write_log('I also allowed for extrapolation to higher initial masses for stripped stars\n')
+         
 
 
 
@@ -3364,9 +2533,9 @@ for iii in range(num_turns):
                 MESA_params_interp_m2[cc,ind_MS_present_m2] = MESA_params_MS_interp_m2[cc,:]
 
         # Tell the log
-        fid_log = open(log_name,'a')
-        fid_log.write('Main sequence star properties done for single stars and binaries. Evaluated at '+str(eval_time/1e6)+'Myr\n')
-        fid_log.close() 
+        
+        utils_object.write_log('Main sequence star properties done for single stars and binaries. Evaluated at '+str(eval_time/1e6)+'Myr\n')
+         
 
         # # # POST MAIN SEQUENCE # # # 
         # Primaries and single stars
@@ -3382,9 +2551,9 @@ for iii in range(num_turns):
                     MESA_params_interp_m2[cc,ind_pMS_present_m2] = MESA_params_pMS_interp_m2[cc,:]
 
         # Tell the log
-        fid_log = open(log_name,'a')
-        fid_log.write('Post main sequence star properties done for single stars and binaries. Evaluated at '+str(eval_time/1e6)+'Myr\n')
-        fid_log.close() 
+        
+        utils_object.write_log('Post main sequence star properties done for single stars and binaries. Evaluated at '+str(eval_time/1e6)+'Myr\n')
+         
 
         # The stripped star phase - always post main sequence
         if compute_binaries:
@@ -3395,9 +2564,9 @@ for iii in range(num_turns):
                     MESA_params_interp[cc,ind_strip_present] = MESA_params_strip_interp[cc2,:]
 
             # Tell the log
-            fid_log = open(log_name,'a')
-            fid_log.write('Stripped star properties done!. Evaluated at '+str(eval_time/1e6)+'Myr\n')
-            fid_log.close() 
+            
+            utils_object.write_log('Stripped star properties done!. Evaluated at '+str(eval_time/1e6)+'Myr\n')
+             
 
 
         if iii == 0:
@@ -3420,9 +2589,9 @@ for iii in range(num_turns):
                     # Main sequence stars
                     ax.plot(log_Teff_interp[ind_MS_present],log_L_interp[ind_MS_present],'.k',label='MS Primaries, \n singles \n and mergers')
                     #  --- UPDATE HERE ---
-                    if compute_binaries:
-                        ax.plot(log_Teff_interp_m2[ind_MS_present_m2],log_L_interp_m2[ind_MS_present_m2],'.',color=[.4]*3,
-                                label='MS Secondaries')
+                    # if compute_binaries:
+                    #     ax.plot(log_Teff_interp_m2[ind_MS_present_m2],log_L_interp_m2[ind_MS_present_m2],'.',color=[.4]*3,
+                    #             label='MS Secondaries')
 
                     # post Main sequence stars
                     if exclude_pMS == False:
@@ -3431,9 +2600,9 @@ for iii in range(num_turns):
                         ax.plot(log_Teff_interp[ind_pMS_present],log_L_interp[ind_pMS_present],'.',color=limegreen,
                                 label='post-MS primaries, \n singles and \n mergers')
                         #  --- UPDATE HERE ---
-                        if compute_binaries:
-                            ax.plot(log_Teff_interp_m2[ind_pMS_present_m2],log_L_interp_m2[ind_pMS_present_m2],'.',color=forest, 
-                                label='post-MS secondaries')
+                        # if compute_binaries:
+                        #     ax.plot(log_Teff_interp_m2[ind_pMS_present_m2],log_L_interp_m2[ind_pMS_present_m2],'.',color=forest, 
+                        #         label='post-MS secondaries')
 
                         # Stripped stars
                         purple = [.5,0,.8]
@@ -3477,15 +2646,15 @@ for iii in range(num_turns):
                     # Main sequence stars
                     ax2.plot(log_Teff_interp[ind_MS_present],log_L_interp[ind_MS_present],'.k')
                     #  --- UPDATE HERE ---
-                    if compute_binaries:
-                        ax2.plot(log_Teff_interp_m2[ind_MS_present_m2],log_L_interp_m2[ind_MS_present_m2],'.',color=[.4]*3)
+                    # if compute_binaries:
+                    #     ax2.plot(log_Teff_interp_m2[ind_MS_present_m2],log_L_interp_m2[ind_MS_present_m2],'.',color=[.4]*3)
 
                     if (exclude_pMS == False):
                         # post Main sequence stars
                         ax2.plot(log_Teff_interp[ind_pMS_present],log_L_interp[ind_pMS_present],'.',color=limegreen)
                         #  --- UPDATE HERE ---
-                        if compute_binaries:
-                            ax2.plot(log_Teff_interp_m2[ind_pMS_present_m2],log_L_interp_m2[ind_pMS_present_m2],'.',color=forest)
+                        # if compute_binaries:
+                        #     ax2.plot(log_Teff_interp_m2[ind_pMS_present_m2],log_L_interp_m2[ind_pMS_present_m2],'.',color=forest)
 
                         # Stripped stars
                         #  --- UPDATE HERE ---
@@ -3496,26 +2665,36 @@ for iii in range(num_turns):
                     #  --- UPDATE HERE ---
                     if compute_binaries:
                         for i in range(nbr_sims_bin):
+                            log_Teff_b = MESA_params_b[i][col_bin.index('log_Teff')]
+                            log_L_b = MESA_params_b[i][col_bin.index('log_L')]
+                            center_he4_b = MESA_params_b[i][col_bin.index('center_he4')]
+                            RLOF_b = MESA_params_b[i][col_bin.index('rl_relative_overflow_1')]
+                            log_abs_mdot_b = MESA_params_b[i][col_bin.index('log_abs_mdot')] #find better solution
+                            star_age_b = MESA_params_b[i][col_bin.index('star_age')]
                             clr='r'  #[.7]*3
                             #if reach_he_depletion_strip[i]:
                             #    clr='r'
-                            indices = np.arange(len(star_age_b[i]))
-                            if center_he4_b[i][-1] < 0.01:
-                                ind_he = indices[center_he4_b[i] > 0.01][-1]
+                            indices = np.arange(len(star_age_b)) #ask ylva
+                            if np.any(center_he4_b < 0.01): #center_he4_b[i][-1] < 0.01: #ask ylva
+                                ind_he = indices[center_he4_b > 0.01][-1]#indices[center_he4_b[i] > 0.01][-1]
                             else:
                                 ind_he = indices[-1]
-                            ind_tmp = RLOF_b[i]*(center_he4_b[i] > 0.5)
+                            ind_tmp = RLOF_b*(center_he4_b > 0.5)#RLOF_b[i]*(center_he4_b[i] > 0.5)
+                            
                             if m_bin_grid[i] < 4.:
-                                if center_he4_b[i][-1] < 0.01:
-                                    ind_tmp = ((RLOF_b[i]+(log_abs_mdot_b[i] > -9))>0)*(center_he4_b[i] > 0.5)
-                                else:
-                                    ind_tmp = ((RLOF_b[i]+(log_abs_mdot_b[i] > -9))>0)*(center_he4_b[i] > 0.5)
-
+                                # if np.any(center_he4_b < 0.01): #center_he4_b[i][-1] < 0.01:#ask ylva
+                                #     ind_tmp = #((RLOF_b[i]+(log_abs_mdot_b[i] > -9))>0)*(center_he4_b[i] > 0.5)
+                                # else:
+                                #     ind_tmp = ((RLOF_b[i]+(log_abs_mdot_b[i] > -9))>0)*(center_he4_b[i] > 0.5)
+                                mask = center_he4_b > 0.01
+                                ind_tmp = ((RLOF_b+(log_abs_mdot_b > -9))>0)*(center_he4_b > 0.5)
                             ind_finish_RLOF = indices[ind_tmp][-1]
                             ind_strip_bin_tmp = indices[ind_finish_RLOF:ind_he]
                             #ind = center_he4_b[i] > 0.01
-                            ax2.plot(log_Teff_b[i],log_L_b[i],'-',color=[.7]*3)
-                            ax2.plot(log_Teff_b[i][ind_strip_bin_tmp],log_L_b[i][ind_strip_bin_tmp],'-',color=clr)
+                            # ax2.plot(log_Teff_b[i],log_L_b[i],'-',color=[.7]*3)
+                            # ax2.plot(log_Teff_b[i][ind_strip_bin_tmp],log_L_b[i][ind_strip_bin_tmp],'-',color=clr)
+                            ax2.plot(log_Teff_b,log_L_b,'-',color=[.7]*3)
+                            ax2.plot(log_Teff_b[ind_strip_bin_tmp],log_L_b[ind_strip_bin_tmp],'-',color=clr)
 
                     ax2.set_xlim(xlim)
                     ax2.set_ylim(ylim)
@@ -3533,9 +2712,9 @@ for iii in range(num_turns):
 
 
                     # Tell the log
-                    fid_log = open(log_name,'a')
-                    fid_log.write('Saved an HRD for the population\n\n')
-                    fid_log.close() 
+                    
+                    utils_object.write_log('Saved an HRD for the population\n\n')
+                     
 
 
 
@@ -3616,10 +2795,10 @@ for iii in range(num_turns):
                 present_state[primary] = copy.copy(present_state_m1)
 
                 # Tell the log that the star-states are updated because of overfilling
-                fid_log = open(log_name,'a')
-                fid_log.write('Updated the star-states of stars in systems that fill their Roche lobe (adding a minus).\n\n')
-                fid_log.write('There are '+str(np.sum(present_state_m2 < 0))+' cases of M2 overfilling...\n')
-                fid_log.close() 
+                
+                utils_object.write_log('Updated the star-states of stars in systems that fill their Roche lobe (adding a minus).\n\n')
+                utils_object.write_log('There are '+str(np.sum(present_state_m2 < 0))+' cases of M2 overfilling...\n')
+                 
 
 
         # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
@@ -3805,10 +2984,10 @@ for iii in range(num_turns):
 
 
         # Tell the log
-        fid_log = open(log_name,'a')
-        fid_log.write('Wrote to data file #1 ('+filename_run+')... \n')
-        fid_log.write('This file contains properties predicted by MESA.\n\n')
-        fid_log.close() 
+        
+        utils_object.write_log('Wrote to data file #1 ('+filename_run+')... \n')
+        utils_object.write_log('This file contains properties predicted by MESA.\n\n')
+         
 
 
     
@@ -3834,13 +3013,13 @@ for i in range(nbr_sims):
 fid.close()
 
 # Tell the log
-fid_log = open(log_name,'a')
-fid_log.write('Wrote also a file for the ZAMS properties predicted by MESA ('+filename_ZAMS+') \n')
-fid_log.close() 
+
+utils_object.write_log('Wrote also a file for the ZAMS properties predicted by MESA ('+filename_ZAMS+') \n')
+ 
 """
 
 # Tell the log
-fid_log = open(log_name,'a')
-fid_log.write('PART 1 OF MOSS FINISHED! \n')
-fid_log.close() 
+
+utils_object.write_log('PART 1 OF MOSS FINISHED! \n')
+ 
 

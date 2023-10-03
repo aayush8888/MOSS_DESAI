@@ -1,0 +1,9 @@
+numpy
+
+[docs]
+sphinx
+sphinx-rtd-theme
+
+[tests]
+pytest
+py
