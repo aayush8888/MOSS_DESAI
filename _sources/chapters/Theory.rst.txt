@@ -6,8 +6,10 @@ Theory
 PERIODS AFTER INTERACTION
 --------------------------
 
-Non-conservative mass transfer. (See Onno Pols lecture notes on binaries for reaching the equation below):
+Non-conservative mass transfer:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. note:: See Onno Pols lecture notes on binaries for reaching the equation below.
+
 .. math::
 
     \frac{\dot{a}}{a} = -2 \frac{\dot{M}_d}{M_d} \left( 1 - \beta \frac{M_d}{M_a} - (1-\beta) (\gamma +\frac{1}{2})\frac{M_d}{M_d + M_a} \right)
@@ -111,7 +113,7 @@ For fully conservative mass transfer, the integral with the :math:`\gamma` disap
 
 
 Fast wind
-Should I calculate this? Is this necessary? (:math`\gamma = M_a/M_d`)
+Should I calculate this? Is this necessary? (:math:`\gamma = M_a/M_d`)
 
 Step from separation to period
 
