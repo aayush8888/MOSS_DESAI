@@ -11,8 +11,10 @@ Welcome to the MOSS documentation!
    :caption: Contents:
 
    chapters/Introduction
+   chapters/Theory
    chapters/Installation
    chapters/MOSS
+   
 
 
 Indices and tables
