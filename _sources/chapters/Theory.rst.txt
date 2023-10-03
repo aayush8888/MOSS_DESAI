@@ -1,10 +1,13 @@
 
-PERIODS AFTER INTERACTION
+Theory
 ==========================
 .. note:: Below - lots of calculations -> Go through at readers risk
 
+PERIODS AFTER INTERACTION
+--------------------------
+
 Non-conservative mass transfer. (See Onno Pols lecture notes on binaries for reaching the equation below):
--------------------------------------------------------------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. math::
 
     \frac{\dot{a}}{a} = -2 \frac{\dot{M}_d}{M_d} \left( 1 - \beta \frac{M_d}{M_a} - (1-\beta) (\gamma +\frac{1}{2})\frac{M_d}{M_d + M_a} \right)
@@ -60,7 +63,7 @@ Putting the LHS and RHS together means that:
     \frac{a_f}{a_i} = \left(\frac{M_{d,i} M_{a,i}}{M_{d,f} M_{a,f}}\right)^{2} \left(\frac{M_{d,f} + M_{a,f}}{M_{d,i} + M_{a,i}}\right)^{2\gamma+1}
 
 Isotropic re-emission
---------------------------------
+~~~~~~~~~~~~~~~~~~~~~~
 In case the mass transfer efficiency is 1 (:math:`\beta = 1`), the :math:`dM` term disappears, meaning that it is independent on whether :math:`\gamma` is a constant or not. Then
 
 .. math::
@@ -83,7 +86,7 @@ which means that then
 
 
 Circumbinary ring
------------------
+~~~~~~~~~~~~~~~~~~
 In the case of a circumbinary ring, the :math:`\gamma = \frac{(M_d + M_a)^2}{M_d M_a} \sqrt{\frac{a_{\rm ring}}{a}}.` Following Artymowicz :math:`\&` Lubow 1994, we set :math:`a_{ring} = 2a` and get :math:`\gamma = \sqrt{2}\frac{(M_d + M_a)^2}{M_d M_a}` (see also Zapartas et al. 2017a). 
 
 For fully non-conservative mass transfer (:math:`\beta = 0`), :math:`M_a` is constant. This means that the RHS becomes
@@ -121,7 +124,7 @@ And, finally, the separation :math:`a` can be translated to a period using Keple
 where the gravitational constant :math:`G = 4\pi  AU^3  yr^{-2} M_{\odot}^{-1}`.
 
 REJUVENATION
-============
+------------
  
 From Tout et al. (1997) there is in Section 5.1 a treatment for rejuvenation.
 
